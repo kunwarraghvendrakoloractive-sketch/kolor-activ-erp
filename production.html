@@ -3195,6 +3195,8 @@
 
     window.onload = function() {
       loadState();
+      isHostMode = true;
+      updateHostUI();
       if (!APP_STATE.manpowerLogs) APP_STATE.manpowerLogs = [];
       if (!APP_STATE.labourRates) APP_STATE.labourRates = {};
       if (!APP_STATE.skillMatrix) APP_STATE.skillMatrix = {};
