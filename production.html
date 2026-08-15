@@ -224,7 +224,7 @@
   width: 100vw !important;
   height: 100vh !important;
   background: rgba(10,10,30,0.95) !important;
-  display: flex !important;
+  display: none !important;
   align-items: center !important;
   justify-content: center !important;
   z-index: 999999 !important;
@@ -4524,6 +4524,27 @@ async function kaWriteCloud(force=false){
 async function kaSyncNow(){ try{await kaLoadCloud();kaCloudStatus('Synced','#16a34a');}catch(e){kaCloudStatus('Sync error','#dc2626');alert(e.message||String(e));} }
 
 async function kaStart(){
+  // AUTO-OPEN: Skip login gate, open ERP directly
+  kaSb=window.supabase.createClient(KA_CLOUD_CONFIG.SUPABASE_URL,KA_CLOUD_CONFIG.SUPABASE_ANON_KEY,{auth:{detectSessionInUrl:true,persistSession:true,autoRefreshToken:true}});
+  renderAll();
+  kaShowBar();
+  kaCloudStatus('Connecting...','#f59e0b');
+  try{
+    const {data}=await kaSb.auth.getSession();
+    if(data&&data.session){
+      kaUser=data.session.user;
+      kaCloudStatus('Cloud connected ✓','#16a34a');
+      await kaLoadCloud();
+    } else {
+      kaCloudStatus('Sign in below to sync','#f59e0b');
+    }
+    kaSb.auth.onAuthStateChange(async(_,session)=>{
+      if(session){kaUser=session.user;kaCloudStatus('Cloud connected ✓','#16a34a');await kaLoadCloud();}
+      else{kaUser=null;kaCloudStatus('Sign in to sync','#f59e0b');}
+    });
+  }catch(e){kaCloudStatus('Offline mode','#f59e0b');}
+  return; // skip old code below
+  //OLDSTART
   if(!kaReadyConfig()){
     kaMakeGate();kaGate(true);kaMsg('Open the HTML file and replace the Supabase URL and anon key first.');return;
   }
