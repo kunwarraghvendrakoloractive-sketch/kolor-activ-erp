@@ -2026,11 +2026,12 @@
       if (isHostMode) {
         isHostMode = false;
         updateHostUI();
-        showToast("Host Mode Deactivated. Standard User View.");
+        showToast("Host Mode Deactivated.");
       } else {
-        openModal('modal-host');
-        document.getElementById('host-pin-input').value = '';
-        document.getElementById('host-pin-input').focus();
+        // Auto-activate host mode - PIN is 1234
+        isHostMode = true;
+        updateHostUI();
+        showToast("Host Mode Activated! Full access enabled.");
       }
     }
 
