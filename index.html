@@ -617,6 +617,7 @@ function kaMakeGate(){
     <button class="ka-cloud-btn ka-primary" onclick="kaSignIn()">Sign in</button>
     <button class="ka-cloud-btn ka-secondary" onclick="kaSignUp()">Create account</button>
     <button class="ka-cloud-btn ka-secondary" onclick="kaSignOut()">Sign out</button>
+    <button class="ka-cloud-btn ka-secondary" onclick="kaResetPwd()" style="font-size:12px;margin-top:4px">Forgot password?</button>
     <div id="kaCloudMsg"></div>
     <div class="ka-muted" style="margin-top:14px">If you are the administrator, create your account first, then add/approve team members in Supabase.</div>
   </div>`;
@@ -648,6 +649,13 @@ async function kaSignUp(){
     if(data.session){kaMsg('Account created and signed in.',true);setTimeout(()=>kaOnSession(data.session),300);}
     else kaMsg('Account created. Check your email if email confirmation is enabled.',true);
   }catch(e){kaMsg(e.message||String(e));}
+}
+async function kaResetPwd(){
+  const email=document.getElementById('kaEmail').value.trim();
+  if(!email) return kaMsg('Enter your email first, then click Forgot password.');
+  const {error}=await kaSb.auth.resetPasswordForEmail(email,{redirectTo:window.location.href});
+  if(error) kaMsg('Error: '+error.message);
+  else kaMsg('Password reset email sent! Check your inbox.',true);
 }
 async function kaSignOut(){ if(kaSb) await kaSb.auth.signOut(); }
 
