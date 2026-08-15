@@ -4437,9 +4437,12 @@ async function kaSignIn(){
     const email=document.getElementById('kaEmail').value.trim();
     const password=document.getElementById('kaPassword').value;
     if(!email||!password) return kaMsg('Enter email and password.');
-    const {error}=await kaSb.auth.signInWithPassword({email,password});
+    const {data,error}=await kaSb.auth.signInWithPassword({email,password});
     if(error) throw error;
     kaMsg('Signed in.',true);
+    if(data&&data.session){
+      setTimeout(()=>kaOnSession(data.session),300);
+    }
   }catch(e){kaMsg(e.message||String(e));}
 }
 async function kaSignUp(){
@@ -4449,7 +4452,7 @@ async function kaSignUp(){
     if(!email||password.length<6) return kaMsg('Use a valid email and a password of at least 6 characters.');
     const {data,error}=await kaSb.auth.signUp({email,password});
     if(error) throw error;
-    if(data.session) kaMsg('Account created and signed in.',true);
+    if(data.session){kaMsg('Account created and signed in.',true);setTimeout(()=>kaOnSession(data.session),300);}
     else kaMsg('Account created. Check your email if email confirmation is enabled.',true);
   }catch(e){kaMsg(e.message||String(e));}
 }
