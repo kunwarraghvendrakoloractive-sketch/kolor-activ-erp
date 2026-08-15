@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Kolor Activ - Admin Password Reset</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:Arial;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#1a1a2e}
+.box{background:white;padding:40px;border-radius:16px;width:400px;text-align:center}
+h2{color:#4b0082;margin-bottom:20px}
+input{width:100%;padding:12px;margin:8px 0;border:1px solid #ddd;border-radius:8px;font-size:15px;box-sizing:border-box}
+button{width:100%;padding:14px;background:#4b0082;color:white;border:none;border-radius:8px;font-size:16px;cursor:pointer;margin-top:10px}
+button:hover{background:#3a0070}
+#msg{margin-top:16px;padding:12px;border-radius:8px;font-size:14px}
+.success{background:#e8f5e9;color:#2e7d32}
+.error{background:#fdecea;color:#b71c1c}
+</style>
+</head>
+<body>
+<div class="box">
+  <h2>🔐 Kolor Activ<br>Password Reset</h2>
+  <p style="color:#666;font-size:14px;margin-bottom:20px">Admin tool to set your password directly</p>
+  <input id="email" type="email" value="kunwarraghvendra.koloractive@gmail.com" placeholder="Email">
+  <input id="newpwd" type="password" placeholder="New password (min 6 chars)" value="Kolor@2024">
+  <input id="confirmpwd" type="password" placeholder="Confirm new password" value="Kolor@2024">
+  <button onclick="resetPwd()">Set New Password</button>
+  <div id="msg"></div>
+</div>
+<script>
+const SUPABASE_URL = 'https://cejqcynsxrxdfaszriwy.supabase.co';
+const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlanFjeW5zeHJ4ZGZhc3pyaXd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjU5ODY0NSwiZXhwIjoyMTAyMTc0NjQ1fQ.RH1pEFQh3puxxvR6f1JftGQVsV5IaEZdsX7fQONguzc';
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlanFjeW5zeHJ4ZGZhc3pyaXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1OTg2NDUsImV4cCI6MjEwMjE3NDY0NX0.TX-V2A2siYbOsyuNITDDyS-mCWXkyfFtdwNIWaplm_k';
+
+function msg(text, ok) {
+  const el = document.getElementById('msg');
+  el.textContent = text;
+  el.className = ok ? 'success' : 'error';
+}
+
+async function resetPwd() {
+  const email = document.getElementById('email').value.trim();
+  const pwd = document.getElementById('newpwd').value;
+  const cpwd = document.getElementById('confirmpwd').value;
+  
+  if (!email || !pwd) return msg('Enter email and password');
+  if (pwd !== cpwd) return msg('Passwords do not match');
+  if (pwd.length < 6) return msg('Password must be at least 6 characters');
+  
+  msg('Processing...', true);
+  
+  try {
+    // Step 1: Get user list using service role
+    const listResp = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?page=1&per_page=50`, {
+      headers: {
+        'apikey': SERVICE_KEY,
+        'Authorization': `Bearer ${SERVICE_KEY}`
+      }
+    });
+    const listData = await listResp.json();
+    const users = listData.users || [];
+    const user = users.find(u => u.email === email);
+    
+    if (!user) {
+      msg('User not found. Creating new account...');
+      // Create new user with service role
+      const createResp = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
+        method: 'POST',
+        headers: {
+          'apikey': SERVICE_KEY,
+          'Authorization': `Bearer ${SERVICE_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: email,
+          password: pwd,
+          email_confirm: true
+        })
+      });
+      const createData = await createResp.json();
+      if (createData.id) {
+        msg('✅ Account created! Go to ERP and sign in with your new password.', true);
+      } else {
+        msg('Error: ' + JSON.stringify(createData));
+      }
+      return;
+    }
+    
+    // Step 2: Update password using service role
+    const updateResp = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${user.id}`, {
+      method: 'PUT',
+      headers: {
+        'apikey': SERVICE_KEY,
+        'Authorization': `Bearer ${SERVICE_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        password: pwd,
+        email_confirm: true
+      })
+    });
+    const updateData = await updateResp.json();
+    
+    if (updateData.id) {
+      msg('✅ Password updated successfully! Go to ERP and sign in now.', true);
+      setTimeout(() => {
+        window.location.href = '/kolor-activ-erp/';
+      }, 3000);
+    } else {
+      msg('Error: ' + JSON.stringify(updateData));
+    }
+  } catch(e) {
+    msg('Error: ' + e.message);
+  }
+}
+</script>
+</body>
+</html>
