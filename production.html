@@ -4530,7 +4530,13 @@ async function kaStart(){
   kaSb=window.supabase.createClient(KA_CLOUD_CONFIG.SUPABASE_URL,KA_CLOUD_CONFIG.SUPABASE_ANON_KEY);
   kaMakeGate();
   const {data}=await kaSb.auth.getSession();
-  if(data.session){await kaOnSession(data.session);} else {kaGate(true);}
+  if(data.session){await kaOnSession(data.session);}
+  else{
+    // No session: open ERP immediately, show sign-in bar at bottom
+    kaGate(false);
+    kaShowBar();
+    kaCloudStatus('Click Sign in to enable cloud sync','#f59e0b');
+  }
   kaSb.auth.onAuthStateChange((_event,session)=>{ if(session) kaOnSession(session); else {kaUser=null;kaGate(true);} });
 }
 async function kaOnSession(session){
