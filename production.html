@@ -4439,7 +4439,7 @@ async function kaSignIn(){
     if(!email||!password) return kaMsg('Enter email and password.');
     const {data,error}=await kaSb.auth.signInWithPassword({email,password});
     if(error) throw error;
-    kaMsg('Signed in.',true);
+    kaMsg('Signed in.',true); setTimeout(()=>window.location.reload(),800);
     if(data&&data.session){
       setTimeout(()=>kaOnSession(data.session),300);
     }
