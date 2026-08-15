@@ -4497,11 +4497,10 @@ async function kaLoadCloud(){
   if(data){
     kaLastCloudUpdatedAt=data.updated_at;
     const empty = !data.state || Object.keys(data.state).length===0;
-    if(empty) await kaWriteCloud(true);
-    else kaApplyState(data.state);
-  }else{
-    await kaWriteCloud(true);
+    if(!empty) kaApplyState(data.state);
+    // Don't overwrite cloud with empty local data
   }
+  // Only write to cloud when user explicitly saves
 }
 async function kaWriteCloud(force=false){
   if(!kaUser || kaSyncBusy) return;
