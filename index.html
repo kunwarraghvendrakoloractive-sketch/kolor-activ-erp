@@ -734,14 +734,11 @@ async function kaStart(){
   kaShowBar();
   kaCloudStatus('Connecting...','#f59e0b');
   try{
-    // Try existing session first, then anonymous
+    // Load cloud data - try with session if available
     const {data:sd}=await kaSb.auth.getSession();
     if(sd&&sd.session){ kaUser=sd.session.user; }
-    else {
-      const {data:anon}=await kaSb.auth.signInAnonymously();
-      if(anon&&anon.session) kaUser=anon.session.user;
-    }
-    if(kaUser){
+    // Load cloud data regardless of auth (public read)
+    {
       await kaLoadCloud();
       kaCloudStatus('Live - Auto ON','#16a34a');
       // Supabase Realtime - instant updates
