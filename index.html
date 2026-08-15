@@ -635,7 +635,10 @@ async function kaSignIn(){
     if(error) throw error;
     kaMsg('Signed in.',true);
     if(data&&data.session){
-      setTimeout(()=>kaOnSession(data.session),300);
+      setTimeout(()=>{ kaOnSession(data.session); kaGate(false); },300);
+    } else {
+      // Session may be in cookie - reload to pick it up
+      setTimeout(()=>window.location.reload(),500);
     }
   }catch(e){kaMsg(e.message||String(e));}
 }
