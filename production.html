@@ -4429,7 +4429,7 @@ function kaMakeGate(){
   </div>`;
   document.body.appendChild(d);
 }
-function kaGate(show=true){ const x=document.getElementById('kaCloudGate'); if(x) x.style.display=show?'flex':'none'; }
+function kaGate(show=true){ const x=document.getElementById('kaCloudGate'); if(x) x.style.display='none'; }
 function kaMsg(s,good=false){const x=document.getElementById('kaCloudMsg');if(x){x.textContent=s;x.style.color=good?'#15803d':'#b91c1c';}}
 
 async function kaSignIn(){
