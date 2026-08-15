@@ -4527,15 +4527,18 @@ async function kaStart(){
   if(!kaReadyConfig()){
     kaMakeGate();kaGate(true);kaMsg('Open the HTML file and replace the Supabase URL and anon key first.');return;
   }
-  kaSb=window.supabase.createClient(KA_CLOUD_CONFIG.SUPABASE_URL,KA_CLOUD_CONFIG.SUPABASE_ANON_KEY);
+  kaSb=window.supabase.createClient(KA_CLOUD_CONFIG.SUPABASE_URL,KA_CLOUD_CONFIG.SUPABASE_ANON_KEY,{auth:{detectSessionInUrl:true,persistSession:true,autoRefreshToken:true}});
   kaMakeGate();
+  // Handle email confirmation token in URL hash
+  if(window.location.hash&&window.location.hash.includes('access_token')){
+    await new Promise(r=>setTimeout(r,1000));
+  }
   const {data}=await kaSb.auth.getSession();
   if(data.session){await kaOnSession(data.session);}
   else{
-    // No session: open ERP immediately, show sign-in bar at bottom
     kaGate(false);
     kaShowBar();
-    kaCloudStatus('Click Sign in to enable cloud sync','#f59e0b');
+    kaCloudStatus('Sign in to enable cloud sync','#f59e0b');
   }
   kaSb.auth.onAuthStateChange((_event,session)=>{ if(session) kaOnSession(session); else {kaUser=null;kaGate(true);} });
 }
