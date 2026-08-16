@@ -216,73 +216,7 @@
     .activity-bar-body { padding: 0 14px 14px; display: none; }
     .activity-bar.open .activity-bar-body { display: block; }
     .inline-tag { display: inline-block; background: var(--surf0); border: 0.5px solid var(--bdr2); border-radius: 4px; padding: 2px 6px; font-size: 11px; color: var(--ink2); margin: 2px; }
-  
-#kaCloudGate {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  background: rgba(10,10,30,0.95) !important;
-  display: none !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 999999 !important;
-  backdrop-filter: blur(4px) !important;
-}
-#kaCloudGate .box {
-  background: #fff !important;
-  border-radius: 16px !important;
-  padding: 36px 32px !important;
-  width: min(420px, 95vw) !important;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.4) !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 12px !important;
-}
-#kaCloudGate h2 {
-  font-size: 22px !important;
-  color: #1a1a2e !important;
-  margin: 4px 0 !important;
-}
-#kaCloudGate input {
-  width: 100% !important;
-  padding: 11px 14px !important;
-  border: 1.5px solid #ddd !important;
-  border-radius: 8px !important;
-  font-size: 15px !important;
-  outline: none !important;
-}
-#kaCloudGate input:focus { border-color: #5b4cf0 !important; }
-.ka-cloud-btn {
-  padding: 11px 18px !important;
-  border-radius: 8px !important;
-  border: none !important;
-  cursor: pointer !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  width: 100% !important;
-}
-.ka-primary { background: linear-gradient(135deg,#5b4cf0,#7c3aed) !important; color: white !important; }
-.ka-secondary { background: #f3f0ff !important; color: #5b4cf0 !important; }
-.ka-muted { font-size: 13px !important; color: #666 !important; line-height: 1.5 !important; }
-#kaCloudBar {
-  position: fixed !important;
-  bottom: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  background: #1a1a2e !important;
-  color: white !important;
-  padding: 8px 20px !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
-  z-index: 9999 !important;
-  font-size: 13px !important;
-}
-#kaCloudDot { width:10px !important; height:10px !important; border-radius:50% !important; background:#f59e0b !important; display:inline-block !important; }
-
-</style>
+  </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -1858,7 +1792,7 @@
 
     // Application Global Runtime State
     let APP_STATE = {};
-    let isHostMode = true; // Auto host mode - full access
+    let isHostMode = false;
     let chartWeek = null;
     let chartKpi = null;
     let chartProd = null;
@@ -2026,12 +1960,11 @@
       if (isHostMode) {
         isHostMode = false;
         updateHostUI();
-        showToast("Host Mode Deactivated.");
+        showToast("Host Mode Deactivated. Standard User View.");
       } else {
-        // Auto-activate host mode - PIN is 1234
-        isHostMode = true;
-        updateHostUI();
-        showToast("Host Mode Activated! Full access enabled.");
+        openModal('modal-host');
+        document.getElementById('host-pin-input').value = '';
+        document.getElementById('host-pin-input').focus();
       }
     }
 
@@ -3195,8 +3128,6 @@
 
     window.onload = function() {
       loadState();
-      isHostMode = true;
-      updateHostUI();
       if (!APP_STATE.manpowerLogs) APP_STATE.manpowerLogs = [];
       if (!APP_STATE.labourRates) APP_STATE.labourRates = {};
       if (!APP_STATE.skillMatrix) APP_STATE.skillMatrix = {};
@@ -4432,7 +4363,7 @@ function kaMakeGate(){
   </div>`;
   document.body.appendChild(d);
 }
-function kaGate(show=true){ const x=document.getElementById('kaCloudGate'); if(x) x.style.display='none'; }
+function kaGate(show=true){ const x=document.getElementById('kaCloudGate'); if(x) x.style.display=show?'flex':'none'; }
 function kaMsg(s,good=false){const x=document.getElementById('kaCloudMsg');if(x){x.textContent=s;x.style.color=good?'#15803d':'#b91c1c';}}
 
 async function kaSignIn(){
@@ -4440,12 +4371,9 @@ async function kaSignIn(){
     const email=document.getElementById('kaEmail').value.trim();
     const password=document.getElementById('kaPassword').value;
     if(!email||!password) return kaMsg('Enter email and password.');
-    const {data,error}=await kaSb.auth.signInWithPassword({email,password});
+    const {error}=await kaSb.auth.signInWithPassword({email,password});
     if(error) throw error;
-    kaMsg('Signed in.',true); setTimeout(()=>window.location.reload(),800);
-    if(data&&data.session){
-      setTimeout(()=>kaOnSession(data.session),300);
-    }
+    kaMsg('Signed in.',true);
   }catch(e){kaMsg(e.message||String(e));}
 }
 async function kaSignUp(){
@@ -4455,7 +4383,7 @@ async function kaSignUp(){
     if(!email||password.length<6) return kaMsg('Use a valid email and a password of at least 6 characters.');
     const {data,error}=await kaSb.auth.signUp({email,password});
     if(error) throw error;
-    if(data.session){kaMsg('Account created and signed in.',true);setTimeout(()=>kaOnSession(data.session),300);}
+    if(data.session) kaMsg('Account created and signed in.',true);
     else kaMsg('Account created. Check your email if email confirmation is enabled.',true);
   }catch(e){kaMsg(e.message||String(e));}
 }
@@ -4500,10 +4428,11 @@ async function kaLoadCloud(){
   if(data){
     kaLastCloudUpdatedAt=data.updated_at;
     const empty = !data.state || Object.keys(data.state).length===0;
-    if(!empty) kaApplyState(data.state);
-    // Don't overwrite cloud with empty local data
+    if(empty) await kaWriteCloud(true);
+    else kaApplyState(data.state);
+  }else{
+    await kaWriteCloud(true);
   }
-  // Only write to cloud when user explicitly saves
 }
 async function kaWriteCloud(force=false){
   if(!kaUser || kaSyncBusy) return;
@@ -4526,71 +4455,13 @@ async function kaWriteCloud(force=false){
 async function kaSyncNow(){ try{await kaLoadCloud();kaCloudStatus('Synced','#16a34a');}catch(e){kaCloudStatus('Sync error','#dc2626');alert(e.message||String(e));} }
 
 async function kaStart(){
-  // AUTO-OPEN: ERP opens with full live sync
-  kaSb=window.supabase.createClient(KA_CLOUD_CONFIG.SUPABASE_URL,KA_CLOUD_CONFIG.SUPABASE_ANON_KEY,{auth:{detectSessionInUrl:true,persistSession:true,autoRefreshToken:true}});
-  renderAll();
-  kaShowBar();
-  kaCloudStatus('Connecting...','#f59e0b');
-  try{
-    // Load cloud data - try with session if available
-    const {data:sd}=await kaSb.auth.getSession();
-    if(sd&&sd.session){ kaUser=sd.session.user; }
-    // Load cloud data regardless of auth (public read)
-    {
-      await kaLoadCloud();
-      kaCloudStatus('Live - Auto ON','#16a34a');
-      // Supabase Realtime - instant updates
-      kaSb.channel('live-'+KA_CLOUD_CONFIG.APP_ID)
-        .on('postgres_changes',{event:'UPDATE',schema:'public',table:'erp_state',
-          filter:'app_id=eq.'+KA_CLOUD_CONFIG.APP_ID},async(payload)=>{
-            if(payload.new&&payload.new.state&&payload.new.updated_at!==kaLastCloudUpdatedAt){
-              kaLastCloudUpdatedAt=payload.new.updated_at;
-              if(typeof kaApplyState==='function') kaApplyState(payload.new.state);
-              kaCloudStatus('Team update!','#7c3aed');
-              setTimeout(()=>kaCloudStatus('Live - Auto ON','#16a34a'),3000);
-            }
-          }).subscribe();
-      // Backup poll every 30 seconds
-      setInterval(async()=>{
-        try{
-          const {data:p}=await kaSb.from('erp_state').select('state,updated_at')
-            .eq('app_id',KA_CLOUD_CONFIG.APP_ID).maybeSingle();
-          if(p&&p.updated_at&&p.updated_at!==kaLastCloudUpdatedAt){
-            kaLastCloudUpdatedAt=p.updated_at;
-            if(typeof kaApplyState==='function') kaApplyState(p.state);
-            kaCloudStatus('Auto-updated!','#7c3aed');
-            setTimeout(()=>kaCloudStatus('Live - Auto ON','#16a34a'),2000);
-          }
-        }catch(e){}
-      },30000);
-    } else {
-      kaCloudStatus('Offline - click Sync','#f59e0b');
-    }
-    kaSb.auth.onAuthStateChange(async(_,s)=>{
-      if(s&&s.user&&s.user.email&&!kaUser?.email){
-        kaUser=s.user; await kaLoadCloud();
-        kaCloudStatus('Signed in - Live ON','#16a34a');
-      }
-    });
-  }catch(e){kaCloudStatus('Offline mode','#f59e0b');}
-  return; // skip old code below
-  //OLDSTART
   if(!kaReadyConfig()){
     kaMakeGate();kaGate(true);kaMsg('Open the HTML file and replace the Supabase URL and anon key first.');return;
   }
-  kaSb=window.supabase.createClient(KA_CLOUD_CONFIG.SUPABASE_URL,KA_CLOUD_CONFIG.SUPABASE_ANON_KEY,{auth:{detectSessionInUrl:true,persistSession:true,autoRefreshToken:true}});
+  kaSb=window.supabase.createClient(KA_CLOUD_CONFIG.SUPABASE_URL,KA_CLOUD_CONFIG.SUPABASE_ANON_KEY);
   kaMakeGate();
-  // Handle email confirmation token in URL hash
-  if(window.location.hash&&window.location.hash.includes('access_token')){
-    await new Promise(r=>setTimeout(r,1000));
-  }
   const {data}=await kaSb.auth.getSession();
-  if(data.session){await kaOnSession(data.session);}
-  else{
-    kaGate(false);
-    kaShowBar();
-    kaCloudStatus('Sign in to enable cloud sync','#f59e0b');
-  }
+  if(data.session){await kaOnSession(data.session);} else {kaGate(true);}
   kaSb.auth.onAuthStateChange((_event,session)=>{ if(session) kaOnSession(session); else {kaUser=null;kaGate(true);} });
 }
 async function kaOnSession(session){
