@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kolor Activ - Sync Test</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial;background:#0f172a;min-height:100vh;padding:20px;color:white}
+.card{background:#1e293b;border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid #334155}
+h1{color:#7c3aed;font-size:22px;margin-bottom:4px}
+h2{color:#94a3b8;font-size:14px;margin-bottom:16px}
+h3{color:#e2e8f0;font-size:16px;margin-bottom:12px}
+.btn{padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;margin:4px}
+.btn-p{background:#7c3aed;color:white}
+.btn-g{background:#16a34a;color:white}
+.btn-b{background:#2563eb;color:white}
+.btn-r{background:#dc2626;color:white}
+.log{background:#0f172a;border-radius:8px;padding:12px;max-height:200px;overflow-y:auto;font-family:monospace;font-size:12px}
+.ok{color:#4ade80}.err{color:#f87171}.warn{color:#fbbf24}.info{color:#60a5fa}
+.status{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;margin:4px 0;font-size:14px}
+.dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.green{background:#16a34a}.red{background:#dc2626}.yellow{background:#f59e0b}.blue{background:#2563eb}
+input{background:#0f172a;border:1px solid #334155;color:white;padding:8px 12px;border-radius:6px;width:100%;margin-bottom:8px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>🔄 Kolor Activ Sync Test</h1>
+  <h2>Tests all sync components. Share this page with team member to test live sync.</h2>
+</div>
+
+<div class="card">
+  <h3>1. Database Connection</h3>
+  <div id="db-status"></div>
+  <button class="btn btn-p" onclick="testDB()">Test Connection</button>
+</div>
+
+<div class="card">
+  <h3>2. Authentication</h3>
+  <div id="auth-status"></div>
+  <button class="btn btn-p" onclick="testAuth()">Test Anonymous Auth</button>
+</div>
+
+<div class="card">
+  <h3>3. Read/Write Test</h3>
+  <div id="rw-status"></div>
+  <button class="btn btn-g" onclick="testWrite()">Write Test Data</button>
+  <button class="btn btn-b" onclick="testRead()">Read Data</button>
+</div>
+
+<div class="card">
+  <h3>4. Live Sync Test</h3>
+  <p style="color:#94a3b8;font-size:13px;margin-bottom:12px">
+    Open this page on TWO devices/browsers.<br>
+    Click "Start Listening" on Device 2, then "Send Update" on Device 1.<br>
+    Device 2 should receive the update instantly.
+  </p>
+  <div id="rt-status"></div>
+  <button class="btn btn-g" onclick="startListen()">📡 Start Listening</button>
+  <button class="btn btn-p" onclick="sendUpdate()">📤 Send Update</button>
+  <div id="rt-log" class="log" style="margin-top:8px;min-height:60px">Waiting...</div>
+</div>
+
+<div class="card">
+  <h3>5. RLS Policy Fix</h3>
+  <p style="color:#94a3b8;font-size:13px;margin-bottom:12px">If tests fail, click this to fix database access policies.</p>
+  <button class="btn btn-r" onclick="fixRLS()">🔧 Fix Database Policies</button>
+  <div id="rls-log" class="log" style="margin-top:8px;min-height:40px"></div>
+</div>
+
+<div class="card">
+  <h3>📋 Full Test Log</h3>
+  <div id="main-log" class="log" style="min-height:100px">Ready to test...
+</div>
+</div>
+
+<script>
+const URL = 'https://cejqcynsxrxdfaszriwy.supabase.co';
+const SVC = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlanFjeW5zeHJ4ZGZhc3pyaXd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjU5ODY0NSwiZXhwIjoyMTAyMTc0NjQ1fQ.RH1pEFQh3puxxvR6f1JftGQVsV5IaEZdsX7fQONguzc';
+const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlanFjeW5zeHJ4ZGZhc3pyaXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1OTg2NDUsImV4cCI6MjEwMjE3NDY0NX0.TX-V2A2siYbOsyuNITDDyS-mCWXkyfFtdwNIWaplm_k';
+
+let sb = null;
+let channel = null;
+
+function log(msg, type='info', targetId='main-log'){
+  const el = document.getElementById(targetId);
+  const time = new Date().toLocaleTimeString();
+  el.innerHTML += `<div class="${type}">[${time}] ${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+function status(id, msg, color){
+  document.getElementById(id).innerHTML = `<div class="status"><div class="dot ${color}"></div><span>${msg}</span></div>`;
+}
+
+async function testDB(){
+  log('Testing database connection...');
+  status('db-status', 'Testing...', 'yellow');
+  try{
+    const r = await fetch(URL+'/rest/v1/erp_state?select=app_id,updated_at', {
+      headers: {'apikey': SVC, 'Authorization': 'Bearer '+SVC}
+    });
+    if(r.ok){
+      const rows = await r.json();
+      log('✓ DB connected - '+rows.length+' records found', 'ok');
+      rows.forEach(r => log('  '+r.app_id+' last sync: '+(r.updated_at?new Date(r.updated_at).toLocaleString():'never'), 'info'));
+      status('db-status', 'Connected ✓ - '+rows.length+' records', 'green');
+    }else{
+      const err = await r.text();
+      log('✗ DB error: HTTP '+r.status+' - '+err.substring(0,100), 'err');
+      status('db-status', 'Error: HTTP '+r.status, 'red');
+    }
+  }catch(e){
+    log('✗ DB exception: '+e.message, 'err');
+    status('db-status', 'Failed: '+e.message, 'red');
+  }
+}
+
+async function testAuth(){
+  log('Testing anonymous authentication...');
+  status('auth-status', 'Testing...', 'yellow');
+  try{
+    sb = window.supabase.createClient(URL, ANON, {auth:{persistSession:true,autoRefreshToken:true}});
+    const {data, error} = await sb.auth.signInAnonymously();
+    if(error){
+      log('✗ Anon auth error: '+error.message, 'err');
+      status('auth-status', 'Failed: '+error.message, 'red');
+    }else{
+      log('✓ Anonymous auth OK - user: '+data.user.id.substring(0,8)+'...', 'ok');
+      status('auth-status', 'Auth OK ✓ - anonymous user created', 'green');
+    }
+  }catch(e){
+    log('✗ Auth exception: '+e.message, 'err');
+    status('auth-status', 'Exception: '+e.message, 'red');
+  }
+}
+
+async function testWrite(){
+  log('Writing test data to cloud...');
+  try{
+    const testData = {test:true, device: navigator.userAgent.substring(0,30), time: new Date().toISOString()};
+    const r = await fetch(URL+'/rest/v1/erp_state?app_id=eq.kolor_store', {
+      method: 'PATCH',
+      headers: {'apikey':SVC,'Authorization':'Bearer '+SVC,'Content-Type':'application/json','Prefer':'return=representation'},
+      body: JSON.stringify({state: testData, updated_at: new Date().toISOString()})
+    });
+    const result = await r.json();
+    if(Array.isArray(result)&&result.length>0){
+      log('✓ Write OK - data saved to cloud', 'ok');
+    }else{
+      // Try insert
+      const r2 = await fetch(URL+'/rest/v1/erp_state', {
+        method: 'POST',
+        headers: {'apikey':SVC,'Authorization':'Bearer '+SVC,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body: JSON.stringify({app_id:'kolor_store', state:testData, updated_at:new Date().toISOString()})
+      });
+      log(r2.ok?'✓ Write OK (inserted)':'✗ Write failed: HTTP '+r2.status, r2.ok?'ok':'err');
+    }
+  }catch(e){
+    log('✗ Write exception: '+e.message, 'err');
+  }
+}
+
+async function testRead(){
+  log('Reading data from cloud...');
+  try{
+    const r = await fetch(URL+'/rest/v1/erp_state?app_id=eq.kolor_store&select=state,updated_at', {
+      headers: {'apikey':SVC,'Authorization':'Bearer '+SVC}
+    });
+    const rows = await r.json();
+    if(rows&&rows.length>0){
+      const d = rows[0];
+      log('✓ Read OK - updated: '+new Date(d.updated_at).toLocaleString(), 'ok');
+      log('  State keys: '+Object.keys(d.state||{}).slice(0,5).join(', '), 'info');
+    }else{
+      log('⚠ Read OK but no data found', 'warn');
+    }
+  }catch(e){
+    log('✗ Read exception: '+e.message, 'err');
+  }
+}
+
+async function startListen(){
+  if(!sb){
+    sb = window.supabase.createClient(URL, ANON, {auth:{persistSession:true}});
+    const {error} = await sb.auth.signInAnonymously();
+    if(error){ log('Auth needed first: '+error.message, 'err', 'rt-log'); return; }
+  }
+  if(channel) sb.removeChannel(channel);
+  log('📡 Listening for updates...', 'info', 'rt-log');
+  status('rt-status', 'Listening for team updates...', 'blue');
+  channel = sb.channel('ka-live-kolor_store')
+    .on('postgres_changes', {event:'UPDATE', schema:'public', table:'erp_state', filter:'app_id=eq.kolor_store'},
+      (payload) => {
+        log('🎉 UPDATE RECEIVED! Time: '+new Date(payload.new.updated_at).toLocaleTimeString(), 'ok', 'rt-log');
+        log('  Data: '+JSON.stringify(payload.new.state).substring(0,80), 'info', 'rt-log');
+        status('rt-status', '✅ Live update received! Realtime is WORKING!', 'green');
+      })
+    .subscribe(status_msg => {
+      log('Realtime: '+status_msg, status_msg==='SUBSCRIBED'?'ok':'warn', 'rt-log');
+      if(status_msg==='SUBSCRIBED') status('rt-status', 'Subscribed ✓ - waiting for updates', 'green');
+    });
+}
+
+async function sendUpdate(){
+  log('Sending update...', 'info', 'rt-log');
+  const data = {sync_test: true, sent_at: new Date().toISOString(), device: navigator.platform};
+  const r = await fetch(URL+'/rest/v1/erp_state?app_id=eq.kolor_store', {
+    method: 'PATCH',
+    headers: {'apikey':SVC,'Authorization':'Bearer '+SVC,'Content-Type':'application/json','Prefer':'return=representation'},
+    body: JSON.stringify({state:data, updated_at:new Date().toISOString()})
+  });
+  const result = await r.json();
+  log(result.length>0?'✓ Update sent! Other devices should receive it.':'✗ Send failed', result.length>0?'ok':'err', 'rt-log');
+}
+
+async function fixRLS(){
+  const rlsLog = document.getElementById('rls-log');
+  rlsLog.innerHTML = '';
+  log('Fixing RLS policies...', 'info', 'rls-log');
+  const sqls = [
+    "drop policy if exists \"erp_open_all\" on erp_state",
+    "create policy \"erp_open_all\" on erp_state for all to anon, authenticated using (true) with check (true)",
+    "alter table erp_state enable row level security"
+  ];
+  for(const sql of sqls){
+    try{
+      const r = await fetch(URL+'/rest/v1/rpc/exec_sql', {
+        method: 'POST',
+        headers: {'apikey':SVC,'Authorization':'Bearer '+SVC,'Content-Type':'application/json'},
+        body: JSON.stringify({sql})
+      });
+      log((r.ok?'✓':'⚠')+' '+sql.substring(0,50), r.ok?'ok':'warn', 'rls-log');
+    }catch(e){ log('- '+sql.substring(0,40)+': '+e.message, 'warn', 'rls-log'); }
+  }
+  log('Done! Re-run tests above.', 'ok', 'rls-log');
+}
+
+// Auto-run basic test on load
+window.onload = () => { setTimeout(testDB, 500); };
+</script>
+</body>
+</html>
