@@ -4424,15 +4424,19 @@ function kaCloudStatus(text, color){
   const u=document.getElementById('kaCloudUser'); if(u && text) u.textContent=(kaUser?.email||'User')+' · '+text;
 }
 async function kaLoadCloud(){
-  const {data,error}=await kaSb.from('erp_state').select('state,updated_at,updated_by').eq('app_id',KA_CLOUD_CONFIG.APP_ID).maybeSingle();
-  if(error) throw error;
-  if(data){
-    kaLastCloudUpdatedAt=data.updated_at;
-    const empty = !data.state || Object.keys(data.state).length===0;
-    if(empty) await kaWriteCloud(true);
-    else kaApplyState(data.state);
-  }else{
-    await kaWriteCloud(true);
+  try{
+    const r=await fetch(KA_CLOUD_CONFIG.SUPABASE_URL+'/rest/v1/erp_state?app_id=eq.'+KA_CLOUD_CONFIG.APP_ID+'&select=state,updated_at',{
+      headers:{'apikey':KA_CLOUD_CONFIG.SERVICE_KEY,'Authorization':'Bearer '+KA_CLOUD_CONFIG.SERVICE_KEY}
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const rows=await r.json();
+    const data=rows[0]||null;
+    if(data&&data.state&&Object.keys(data.state).length>0){
+      kaLastCloudUpdatedAt=data.updated_at;
+      kaApplyState(data.state);
+    }
+  }catch(e){
+    console.warn('Cloud load error:',e.message);
   }
 }
 async function kaWriteCloud(force=false){
