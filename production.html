@@ -4428,8 +4428,8 @@ async function kaLoadCloud(){
   if(data){
     kaLastCloudUpdatedAt=data.updated_at;
     const empty = !data.state || Object.keys(data.state).length===0;
-    if(empty) await kaWriteCloud(true);
-    else kaApplyState(data.state);
+    if(!empty) kaApplyState(data.state);
+    // Never overwrite cloud data with empty local state
   }else{
     await kaWriteCloud(true);
   }
@@ -4458,11 +4458,19 @@ async function kaStart(){
   if(!kaReadyConfig()){
     kaMakeGate();kaGate(true);kaMsg('Open the HTML file and replace the Supabase URL and anon key first.');return;
   }
-  kaSb=window.supabase.createClient(KA_CLOUD_CONFIG.SUPABASE_URL,KA_CLOUD_CONFIG.SUPABASE_ANON_KEY);
-  kaMakeGate();
-  const {data}=await kaSb.auth.getSession();
-  if(data.session){await kaOnSession(data.session);} else {kaGate(true);}
-  kaSb.auth.onAuthStateChange((_event,session)=>{ if(session) kaOnSession(session); else {kaUser=null;kaGate(true);} });
+  kaSb=window.supabase.createClient(KA_CLOUD_CONFIG.SUPABASE_URL,KA_CLOUD_CONFIG.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  // Try existing session, then auto sign-in anonymously for live sync
+  const {data:sd}=await kaSb.auth.getSession();
+  if(sd&&sd.session){
+    await kaOnSession(sd.session);
+  } else {
+    try{
+      const {data:anon,error:ae}=await kaSb.auth.signInAnonymously();
+      if(!ae&&anon.session){ await kaOnSession(anon.session); }
+      else { kaMakeGate(); kaGate(true); }
+    }catch(e){ kaMakeGate(); kaGate(true); }
+  }
+  kaSb.auth.onAuthStateChange((_event,session)=>{ if(session) kaOnSession(session); });
 }
 async function kaOnSession(session){
   kaUser=session.user; kaGate(false); kaShowBar();
@@ -4470,13 +4478,26 @@ async function kaOnSession(session){
   if(kaRemoteChannel) kaSb.removeChannel(kaRemoteChannel);
   kaRemoteChannel=kaSb.channel('ka-'+KA_CLOUD_CONFIG.APP_ID)
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'erp_state',filter:'app_id=eq.'+KA_CLOUD_CONFIG.APP_ID},payload=>{
-      if(payload.new && payload.new.updated_by!==kaUser?.id){
+      if(payload.new && payload.new.state){
         kaLastCloudUpdatedAt=payload.new.updated_at;
         kaApplyState(payload.new.state);
         kaCloudStatus('Updated from team','#7c3aed');
         setTimeout(()=>kaCloudStatus('Synced','#16a34a'),2500);
       }
     }).subscribe();
+  // Backup: auto-poll every 30 seconds
+  setInterval(async()=>{
+    try{
+      const {data:p}=await kaSb.from('erp_state').select('state,updated_at')
+        .eq('app_id',KA_CLOUD_CONFIG.APP_ID).maybeSingle();
+      if(p&&p.state&&p.updated_at!==kaLastCloudUpdatedAt){
+        kaLastCloudUpdatedAt=p.updated_at;
+        kaApplyState(p.state);
+        kaCloudStatus('Team update received!','#7c3aed');
+        setTimeout(()=>kaCloudStatus('Synced','#16a34a'),3000);
+      }
+    }catch(e){}
+  },30000);
 }
 
 /* Patch the existing local save functions so every existing ERP form also saves to cloud. */
