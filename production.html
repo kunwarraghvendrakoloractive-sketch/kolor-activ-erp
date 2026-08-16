@@ -1563,8 +1563,8 @@
 
   <script>
     /* ============================================================
-   KOLOR ACTIV COMPLETE LIVE SYNC - FINAL VERSION
-   No login required. Auto realtime. 30s backup poll.
+   KOLOR ACTIV LIVE SYNC - PRODUCTION ERP
+   Auto-signin + Realtime + 30s backup poll
    ============================================================ */
 const KA_CLOUD_CONFIG = {
   SUPABASE_URL: 'https://cejqcynsxrxdfaszriwy.supabase.co',
@@ -1573,188 +1573,115 @@ const KA_CLOUD_CONFIG = {
   APP_ID: 'kolor_production',
   APP_NAME: 'Kolor Activ Production ERP'
 };
-
 function kaReadyConfig(){
   return KA_CLOUD_CONFIG.SUPABASE_URL.startsWith('https://')
-    && KA_CLOUD_CONFIG.SUPABASE_ANON_KEY.length > 20;
+    && !KA_CLOUD_CONFIG.SUPABASE_URL.includes('YOUR-PROJECT')
+    && KA_CLOUD_CONFIG.SUPABASE_ANON_KEY
+    && !KA_CLOUD_CONFIG.SUPABASE_ANON_KEY.includes('YOUR_');
 }
-
-let kaSb = null;
-let kaUser = null;
-let kaLastCloudUpdatedAt = null;
-let kaSyncing = false;
+let kaSb=null,kaUser=null,kaLastCloudUpdatedAt=null,kaSyncing=false;
 
 function kaShowBar(){
-  let b = document.getElementById('kaCloudBar');
-  if(!b){
-    b = document.createElement('div');
-    b.id = 'kaCloudBar';
-    b.style.cssText = 'position:fixed!important;bottom:0!important;left:0!important;width:100%!important;background:#1a1a2e!important;color:white!important;padding:8px 20px!important;display:flex!important;align-items:center!important;gap:12px!important;z-index:9999!important;font-size:13px!important;';
-    b.innerHTML = '<span id="kaCloudDot" style="width:10px;height:10px;border-radius:50%;background:#f59e0b;display:inline-block"></span><span id="kaCloudUser" style="flex:1">Connecting...</span><button onclick="kaSyncNow()" style="background:#4b0082;color:white;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px">Sync</button><button onclick="kaSignOut()" style="background:#333;color:white;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px">Logout</button>';
-    document.body.appendChild(b);
-  }
+  let b=document.getElementById('kaCloudBar');
+  if(b) return;
+  b=document.createElement('div');
+  b.id='kaCloudBar';
+  b.style.cssText='position:fixed!important;bottom:0!important;left:0!important;width:100%!important;background:#1a1a2e!important;color:white!important;padding:8px 20px!important;display:flex!important;align-items:center!important;gap:12px!important;z-index:9999!important;font-size:13px!important;';
+  b.innerHTML='<span id="kaCloudDot" style="width:10px;height:10px;border-radius:50%;background:#f59e0b;display:inline-block"></span><span id="kaCloudUser" style="flex:1">Connecting...</span><button onclick="kaSyncNow()" style="background:#4b0082;color:white;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px">Sync</button><button onclick="if(kaSb)kaSb.auth.signOut()" style="background:#333;color:white;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px">Logout</button>';
+  document.body.appendChild(b);
 }
-
-function kaCloudStatus(msg, color){
-  const dot = document.getElementById('kaCloudDot');
-  const user = document.getElementById('kaCloudUser');
-  if(dot) dot.style.background = color;
-  if(user) user.textContent = msg;
+function kaCloudStatus(msg,color){
+  const dot=document.getElementById('kaCloudDot');
+  const usr=document.getElementById('kaCloudUser');
+  if(dot) dot.style.background=color;
+  if(usr) usr.textContent=msg;
 }
-
 async function kaFetchCloud(){
-  // Use service key to bypass RLS completely
-  const r = await fetch(`${KA_CLOUD_CONFIG.SUPABASE_URL}/rest/v1/erp_state?app_id=eq.${KA_CLOUD_CONFIG.APP_ID}&select=state,updated_at`, {
-    headers: {
-      'apikey': KA_CLOUD_CONFIG.SUPABASE_SERVICE_KEY,
-      'Authorization': `Bearer ${KA_CLOUD_CONFIG.SUPABASE_SERVICE_KEY}`
-    }
+  const r=await fetch(KA_CLOUD_CONFIG.SUPABASE_URL+'/rest/v1/erp_state?app_id=eq.'+KA_CLOUD_CONFIG.APP_ID+'&select=state,updated_at',{
+    headers:{'apikey':KA_CLOUD_CONFIG.SUPABASE_SERVICE_KEY,'Authorization':'Bearer '+KA_CLOUD_CONFIG.SUPABASE_SERVICE_KEY}
   });
-  if(!r.ok) throw new Error('Fetch failed: ' + r.status);
-  const rows = await r.json();
-  return rows[0] || null;
+  if(!r.ok) throw new Error('Fetch failed');
+  const rows=await r.json();
+  return rows[0]||null;
 }
-
-async function kaSaveToCloud(stateObj){
-  const r = await fetch(`${KA_CLOUD_CONFIG.SUPABASE_URL}/rest/v1/erp_state?app_id=eq.${KA_CLOUD_CONFIG.APP_ID}`, {
-    method: 'PATCH',
-    headers: {
-      'apikey': KA_CLOUD_CONFIG.SUPABASE_SERVICE_KEY,
-      'Authorization': `Bearer ${KA_CLOUD_CONFIG.SUPABASE_SERVICE_KEY}`,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=representation'
-    },
-    body: JSON.stringify({state: stateObj, updated_at: new Date().toISOString()})
-  });
-  if(!r.ok) {
-    // Try INSERT if PATCH fails (row doesn't exist)
-    await fetch(`${KA_CLOUD_CONFIG.SUPABASE_URL}/rest/v1/erp_state`, {
-      method: 'POST',
-      headers: {
-        'apikey': KA_CLOUD_CONFIG.SUPABASE_SERVICE_KEY,
-        'Authorization': `Bearer ${KA_CLOUD_CONFIG.SUPABASE_SERVICE_KEY}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({app_id: KA_CLOUD_CONFIG.APP_ID, state: stateObj, updated_at: new Date().toISOString()})
-    });
-  }
-}
-
-async function kaLoadCloud(){
-  try{
-    const data = await kaFetchCloud();
-    if(data && data.state && Object.keys(data.state).length > 0){
-      kaLastCloudUpdatedAt = data.updated_at;
-      if(typeof kaApplyState === 'function') kaApplyState(data.state);
-      else if(typeof kaD !== 'undefined') { Object.assign(kaD, data.state); if(typeof renderAll==='function') renderAll(); }
-      kaCloudStatus('Live - Synced ✓', '#16a34a');
-    } else {
-      kaCloudStatus('Ready - No cloud data yet', '#f59e0b');
-    }
-  }catch(e){
-    kaCloudStatus('Cloud error - working offline', '#dc2626');
-  }
-}
-
 async function kaSyncNow(){
   if(kaSyncing) return;
-  kaSyncing = true;
-  kaCloudStatus('Syncing...', '#f59e0b');
+  kaSyncing=true;
+  kaCloudStatus('Syncing...','#f59e0b');
   try{
-    // Get current local state
-    let state = {};
-    if(typeof kaGetState === 'function') state = kaGetState();
-    else if(typeof kaD !== 'undefined') state = kaD;
-    else if(typeof window.appData !== 'undefined') state = window.appData;
-    
-    await kaSaveToCloud(state);
-    kaLastCloudUpdatedAt = new Date().toISOString();
-    kaCloudStatus('Saved to cloud ✓', '#16a34a');
+    let state={};
+    if(typeof kaGetState==='function') state=kaGetState();
+    else if(typeof kaD!=='undefined') state=kaD;
+    const r=await fetch(KA_CLOUD_CONFIG.SUPABASE_URL+'/rest/v1/erp_state?app_id=eq.'+KA_CLOUD_CONFIG.APP_ID,{
+      method:'PATCH',
+      headers:{'apikey':KA_CLOUD_CONFIG.SUPABASE_SERVICE_KEY,'Authorization':'Bearer '+KA_CLOUD_CONFIG.SUPABASE_SERVICE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({state:state,updated_at:new Date().toISOString()})
+    });
+    if(!r.ok){
+      await fetch(KA_CLOUD_CONFIG.SUPABASE_URL+'/rest/v1/erp_state',{
+        method:'POST',
+        headers:{'apikey':KA_CLOUD_CONFIG.SUPABASE_SERVICE_KEY,'Authorization':'Bearer '+KA_CLOUD_CONFIG.SUPABASE_SERVICE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body:JSON.stringify({app_id:KA_CLOUD_CONFIG.APP_ID,state:state,updated_at:new Date().toISOString()})
+      });
+    }
+    kaLastCloudUpdatedAt=new Date().toISOString();
+    kaCloudStatus('Saved ✓','#16a34a');
     setTimeout(()=>kaCloudStatus('Live - Synced ✓','#16a34a'),2000);
-  }catch(e){
-    kaCloudStatus('Save failed - try again', '#dc2626');
-  }
-  kaSyncing = false;
+  }catch(e){kaCloudStatus('Save failed','#dc2626');}
+  kaSyncing=false;
 }
-
-async function kaSignOut(){
-  if(kaSb) await kaSb.auth.signOut();
-  kaCloudStatus('Signed out', '#666');
-}
-
 async function kaStart(){
   if(!kaReadyConfig()) return;
-  
   kaShowBar();
-  kaCloudStatus('Connecting...', '#f59e0b');
-  
-  // Render local data first so ERP is immediately usable
-  if(typeof renderAll === 'function') renderAll();
-  
-  // Load from cloud
-  await kaLoadCloud();
-  
-  // Setup realtime with anon key
+  kaCloudStatus('Connecting...','#f59e0b');
   try{
-    kaSb = window.supabase.createClient(KA_CLOUD_CONFIG.SUPABASE_URL, KA_CLOUD_CONFIG.SUPABASE_ANON_KEY, {auth:{persistSession:true,autoRefreshToken:true}});
-    const {data:anon} = await kaSb.auth.signInAnonymously();
-    if(anon && anon.session){
-      kaUser = anon.session.user;
-      // Realtime subscription
-      kaSb.channel('ka-live-' + KA_CLOUD_CONFIG.APP_ID)
-        .on('postgres_changes', {event:'UPDATE', schema:'public', table:'erp_state', filter:'app_id=eq.' + KA_CLOUD_CONFIG.APP_ID},
-          async(payload)=>{
-            if(payload.new && payload.new.updated_at !== kaLastCloudUpdatedAt){
-              kaLastCloudUpdatedAt = payload.new.updated_at;
-              if(payload.new.state && Object.keys(payload.new.state).length > 0){
-                if(typeof kaApplyState==='function') kaApplyState(payload.new.state);
-                else if(typeof kaD!=='undefined'){ Object.assign(kaD,payload.new.state); if(typeof renderAll==='function') renderAll(); }
-                kaCloudStatus('Team update received!', '#7c3aed');
-                setTimeout(()=>kaCloudStatus('Live - Synced ✓','#16a34a'),3000);
-              }
-            }
-          })
-        .subscribe();
-      kaCloudStatus('Live - Auto sync ON ✓', '#16a34a');
+    const data=await kaFetchCloud();
+    if(data&&data.state&&Object.keys(data.state).length>0){
+      kaLastCloudUpdatedAt=data.updated_at;
+      if(typeof kaApplyState==='function') kaApplyState(data.state);
+      kaCloudStatus('Live - Synced ✓','#16a34a');
+    } else {
+      kaCloudStatus('Ready - No cloud data yet','#f59e0b');
     }
-  }catch(e){
-    kaCloudStatus('Realtime unavailable - using poll', '#f59e0b');
-  }
-  
-  // Backup poll every 30 seconds
+  }catch(e){kaCloudStatus('Offline mode','#dc2626');}
+  try{
+    kaSb=window.supabase.createClient(KA_CLOUD_CONFIG.SUPABASE_URL,KA_CLOUD_CONFIG.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+    const {data:anon}=await kaSb.auth.signInAnonymously();
+    if(anon&&anon.session){
+      kaUser=anon.session.user;
+      kaSb.channel('ka-prod-live')
+        .on('postgres_changes',{event:'UPDATE',schema:'public',table:'erp_state',filter:'app_id=eq.kolor_production'},async(payload)=>{
+          if(payload.new&&payload.new.updated_at!==kaLastCloudUpdatedAt&&payload.new.state&&Object.keys(payload.new.state).length>0){
+            kaLastCloudUpdatedAt=payload.new.updated_at;
+            if(typeof kaApplyState==='function') kaApplyState(payload.new.state);
+            kaCloudStatus('Team update!','#7c3aed');
+            setTimeout(()=>kaCloudStatus('Live - Synced ✓','#16a34a'),3000);
+          }
+        }).subscribe();
+      kaCloudStatus('Live - Auto sync ON ✓','#16a34a');
+    }
+  }catch(e){kaCloudStatus('Realtime unavailable','#f59e0b');}
   setInterval(async()=>{
     try{
-      const data = await kaFetchCloud();
-      if(data && data.updated_at && data.updated_at !== kaLastCloudUpdatedAt && data.state && Object.keys(data.state).length > 0){
-        kaLastCloudUpdatedAt = data.updated_at;
+      const data=await kaFetchCloud();
+      if(data&&data.updated_at&&data.updated_at!==kaLastCloudUpdatedAt&&data.state&&Object.keys(data.state).length>0){
+        kaLastCloudUpdatedAt=data.updated_at;
         if(typeof kaApplyState==='function') kaApplyState(data.state);
-        else if(typeof kaD!=='undefined'){ Object.assign(kaD,data.state); if(typeof renderAll==='function') renderAll(); }
-        kaCloudStatus('Auto-updated from team!', '#7c3aed');
+        kaCloudStatus('Auto-updated!','#7c3aed');
         setTimeout(()=>kaCloudStatus('Live - Synced ✓','#16a34a'),2000);
       }
     }catch(e){}
-  }, 30000);
-  
-  // Patch existing save functions to auto-sync to cloud
-  if(KA_CLOUD_CONFIG.APP_ID === 'kolor_production'){
-    const wait = ()=>{
-      if(typeof kaWriteCloud === 'function'){
-        const oldSave = save;
-        window.save = async function(){
-          oldSave.apply(this, arguments);
-          await kaSyncNow();
-        };
-        kaCloudStatus('Live - Auto sync ON ✓', '#16a34a');
-      } else {
-        setTimeout(wait, 500);
-      }
-    };
-    setTimeout(wait, 1000);
-  }
+  },30000);
+  // Auto-save on production save
+  const patchSave=()=>{
+    if(typeof save==='function'){
+      const old=save;
+      window.save=async function(){old.apply(this,arguments);setTimeout(kaSyncNow,500);};
+    } else setTimeout(patchSave,1000);
+  };
+  setTimeout(patchSave,2000);
 }
-
-window.addEventListener('load', ()=>setTimeout(kaStart, 300));
+window.addEventListener('load',()=>setTimeout(kaStart,250));
 
   </script>
 </body>
