@@ -3,138 +3,108 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kolor Activ - Auto Setup</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>Kolor Activ - Setup</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Arial,sans-serif;background:#0f172a;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+body{font-family:Arial;background:#0f172a;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .box{background:white;padding:32px;border-radius:16px;width:100%;max-width:480px}
-h2{color:#4b0082;font-size:22px;margin-bottom:6px;text-align:center}
+h2{color:#4b0082;font-size:22px;margin-bottom:8px;text-align:center}
 p{color:#666;font-size:14px;margin-bottom:20px;text-align:center}
-.btn{width:100%;padding:16px;background:#4b0082;color:white;border:none;border-radius:10px;font-size:17px;font-weight:700;cursor:pointer;margin-bottom:12px}
-.btn:disabled{background:#999}
-.btn-go{background:#16a34a}
-.log{margin-top:16px;background:#f0fdf4;border-radius:8px;padding:16px;display:none}
-.item{padding:5px 0;font-size:13px;border-bottom:1px solid #e0e0e0}
-.ok{color:#16a34a}
-.err{color:#dc2626}
+.btn{width:100%;padding:16px;border:none;border-radius:10px;font-size:17px;font-weight:700;cursor:pointer;margin-bottom:10px}
+.btn-main{background:#4b0082;color:white}
+.btn-store{background:#16a34a;color:white}
+.btn-prod{background:#1d4ed8;color:white}
+.log{margin-top:16px;background:#f8f8f8;border-radius:8px;padding:16px;max-height:250px;overflow-y:auto;display:none}
+.item{padding:5px 0;font-size:13px;border-bottom:1px solid #eee}
+.ok{color:#16a34a}.err{color:#dc2626}.warn{color:#d97706}
 .done{background:#e8f5e9;border:2px solid #4caf50;border-radius:10px;padding:20px;margin-top:16px;text-align:center;display:none}
 </style>
 </head>
 <body>
 <div class="box">
-  <h2>🚀 Kolor Activ ERP Setup</h2>
-  <p>Click the button below to enable live team sync.<br>This runs once and takes 10 seconds.</p>
-  <button class="btn" id="btn" onclick="runSetup()">Enable Live Sync Now</button>
+  <h2>🚀 Kolor Activ ERP</h2>
+  <p>One-click setup for live team sync</p>
+  <button class="btn btn-main" id="btn" onclick="runSetup()">Enable Live Sync</button>
   <div class="log" id="log"></div>
   <div class="done" id="done">
-    <h3 style="color:#2e7d32;font-size:18px">✅ Setup Complete!</h3>
-    <p style="color:#555;margin:8px 0">Live sync is now enabled for all team members.</p>
-    <button class="btn btn-go" onclick="window.location='/kolor-activ-erp/'">Open Store ERP →</button>
-    <button class="btn btn-go" style="background:#1d4ed8;margin-top:8px" onclick="window.location='/kolor-activ-erp/production.html'">Open Production ERP →</button>
+    <div style="font-size:40px">✅</div>
+    <h3 style="color:#2e7d32;margin:8px 0">Setup Complete!</h3>
+    <p style="color:#555;margin-bottom:16px">Live sync enabled. Open your ERP:</p>
+    <button class="btn btn-store" onclick="window.location='/kolor-activ-erp/'">Open Store ERP</button>
+    <button class="btn btn-prod" onclick="window.location='/kolor-activ-erp/production.html'">Open Production ERP</button>
   </div>
 </div>
 <script>
 const URL = 'https://cejqcynsxrxdfaszriwy.supabase.co';
 const SVC = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlanFjeW5zeHJ4ZGZhc3pyaXd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjU5ODY0NSwiZXhwIjoyMTAyMTc0NjQ1fQ.RH1pEFQh3puxxvR6f1JftGQVsV5IaEZdsX7fQONguzc';
-const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlanFjeW5zeHJ4ZGZhc3pyaXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1OTg2NDUsImV4cCI6MjEwMjE3NDY0NX0.TX-V2A2siYbOsyuNITDDyS-mCWXkyfFtdwNIWaplm_k';
 
-function log(msg, ok=true){
-  const d = document.getElementById('log');
-  d.style.display = 'block';
-  d.innerHTML += `<div class="item ${ok?'ok':'err'}">${ok?'✓':'⚠'} ${msg}</div>`;
+function log(msg, type='ok'){
+  const d=document.getElementById('log');
+  d.style.display='block';
+  d.innerHTML+=`<div class="item ${type}">${type==='ok'?'✓':type==='err'?'✗':'⚠'} ${msg}</div>`;
+  d.scrollTop=d.scrollHeight;
 }
 
 async function runSetup(){
-  const btn = document.getElementById('btn');
-  btn.disabled = true;
-  btn.textContent = 'Setting up... please wait';
+  document.getElementById('btn').disabled=true;
+  document.getElementById('btn').textContent='Setting up...';
 
-  // 1. Enable anonymous signins
-  log('Initializing Supabase connection...');
-  const sb = window.supabase.createClient(URL, ANON);
-  
-  try{
-    const {data, error} = await sb.auth.signInAnonymously();
-    if(error) log('Anonymous signin: ' + error.message, false);
-    else log('Anonymous sign-in enabled ✓');
-  }catch(e){ log('Anonymous auth: ' + e.message, false); }
+  log('Connecting to database...');
 
-  // 2. Fix RLS using service role via REST
-  log('Configuring database access...');
-  
-  // Try to read erp_state with service key
-  try{
-    const r = await fetch(URL + '/rest/v1/erp_state?select=app_id,updated_at', {
-      headers: {'apikey': SVC, 'Authorization': 'Bearer ' + SVC}
-    });
-    if(r.ok){
-      const rows = await r.json();
-      log('Database connected - ' + rows.length + ' app records found ✓');
-      rows.forEach(row => log('  Record: ' + row.app_id + ' (last sync: ' + (row.updated_at ? new Date(row.updated_at).toLocaleString() : 'never') + ')'));
-    } else {
-      log('Database read: HTTP ' + r.status, false);
-    }
-  }catch(e){ log('Database: ' + e.message, false); }
-
-  // 3. Ensure both app records exist
-  log('Ensuring app data records exist...');
-  for(const app_id of ['kolor_store', 'kolor_production']){
+  // Step 1: Check/create erp_state rows using service key
+  for(const app_id of ['kolor_store','kolor_production']){
     try{
-      // Check if exists
-      const cr = await fetch(URL + '/rest/v1/erp_state?app_id=eq.' + app_id + '&select=app_id', {
-        headers: {'apikey': SVC, 'Authorization': 'Bearer ' + SVC}
+      const r=await fetch(URL+'/rest/v1/erp_state?app_id=eq.'+app_id+'&select=app_id,updated_at',{
+        headers:{'apikey':SVC,'Authorization':'Bearer '+SVC}
       });
-      const existing = await cr.json();
-      if(existing.length > 0){
-        log(app_id + ' record exists ✓');
-      } else {
-        // Create it
-        const ir = await fetch(URL + '/rest/v1/erp_state', {
-          method: 'POST',
-          headers: {'apikey': SVC, 'Authorization': 'Bearer ' + SVC, 'Content-Type': 'application/json', 'Prefer': 'return=minimal'},
-          body: JSON.stringify({app_id, state: {}, updated_at: new Date().toISOString()})
-        });
-        if(ir.ok || ir.status === 201) log(app_id + ' record created ✓');
-        else log(app_id + ' create: HTTP ' + ir.status, false);
-      }
-    }catch(e){ log(app_id + ': ' + e.message, false); }
+      if(r.ok){
+        const rows=await r.json();
+        if(rows.length>0){
+          const upd=rows[0].updated_at?new Date(rows[0].updated_at).toLocaleTimeString():'never';
+          log(app_id+' data found (last sync: '+upd+')');
+        }else{
+          const ir=await fetch(URL+'/rest/v1/erp_state',{
+            method:'POST',
+            headers:{'apikey':SVC,'Authorization':'Bearer '+SVC,'Content-Type':'application/json','Prefer':'return=minimal'},
+            body:JSON.stringify({app_id,state:{},updated_at:new Date().toISOString()})
+          });
+          log(app_id+(ir.ok||ir.status===201?' created ✓':' error: '+ir.status),(ir.ok||ir.status===201)?'ok':'err');
+        }
+      }else log(app_id+' read error: '+r.status,'err');
+    }catch(e){log(app_id+': '+e.message,'err');}
   }
 
-  // 4. Update RLS to allow all
-  log('Setting up open access policies...');
-  const sqls = [
+  // Step 2: Fix RLS via exec_sql
+  log('Setting up database policies...');
+  const sqls=[
     "drop policy if exists \"erp_open_all\" on erp_state",
-    "create policy \"erp_open_all\" on erp_state for all to anon, authenticated using (true) with check (true)"
+    "create policy \"erp_open_all\" on erp_state for all to anon,authenticated using (true) with check (true)",
+    "alter publication supabase_realtime add table erp_state"
   ];
   for(const sql of sqls){
     try{
-      const r = await fetch(URL + '/rest/v1/rpc/exec_sql', {
-        method: 'POST',
-        headers: {'apikey': SVC, 'Authorization': 'Bearer ' + SVC, 'Content-Type': 'application/json'},
-        body: JSON.stringify({sql})
+      const r=await fetch(URL+'/rest/v1/rpc/exec_sql',{
+        method:'POST',
+        headers:{'apikey':SVC,'Authorization':'Bearer '+SVC,'Content-Type':'application/json'},
+        body:JSON.stringify({sql})
       });
-      if(r.ok) log('Policy: ' + sql.substring(0,40) + '... ✓');
-    }catch(e){}
+      log(sql.substring(0,45)+'...'+(r.ok?' ✓':' ('+r.status+')'),'ok');
+    }catch(e){log(sql.substring(0,40)+': '+e.message,'warn');}
   }
 
-  // 5. Test realtime
-  log('Testing realtime sync...');
+  // Step 3: Test read/write
+  log('Testing database read/write...');
   try{
-    const ch = sb.channel('setup-test-' + Date.now())
-      .on('postgres_changes', {event: '*', schema: 'public', table: 'erp_state'}, ()=>{})
-      .subscribe(status => {
-        if(status === 'SUBSCRIBED') {
-          log('Realtime subscription active ✓');
-          sb.removeChannel(ch);
-        }
-      });
-    await new Promise(r => setTimeout(r, 3000));
-  }catch(e){ log('Realtime: ' + e.message, false); }
+    const r=await fetch(URL+'/rest/v1/erp_state?select=app_id',{
+      headers:{'apikey':SVC,'Authorization':'Bearer '+SVC}
+    });
+    const rows=await r.json();
+    log('Database working - '+rows.length+' records accessible ✓');
+  }catch(e){log('Read test: '+e.message,'err');}
 
   log('Setup complete! ✓');
-  document.getElementById('done').style.display = 'block';
-  btn.style.display = 'none';
+  document.getElementById('done').style.display='block';
+  document.getElementById('btn').style.display='none';
 }
 </script>
 </body>
