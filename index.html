@@ -498,7 +498,6 @@ const KA_CLOUD_CONFIG = {
   SUPABASE_URL: 'https://cejqcynsxrxdfaszriwy.supabase.co',
   SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlanFjeW5zeHJ4ZGZhc3pyaXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1OTg2NDUsImV4cCI6MjEwMjE3NDY0NX0.TX-V2A2siYbOsyuNITDDyS-mCWXkyfFtdwNIWaplm_k',
   APP_ID: 'kolor_store',
-  SERVICE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlanFjeW5zeHJ4ZGZhc3pyaXd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjU5ODY0NSwiZXhwIjoyMTAyMTc0NjQ1fQ.RH1pEFQh3puxxvR6f1JftGQVsV5IaEZdsX7fQONguzc',
   APP_NAME: 'Kolor Activ Store ERP'
 };
 
@@ -593,23 +592,16 @@ function kaCloudStatus(text, color){
   const u=document.getElementById('kaCloudUser'); if(u && text) u.textContent=(kaUser?.email||'User')+' · '+text;
 }
 async function kaLoadCloud(){
-  try{
-    const r=await fetch(KA_CLOUD_CONFIG.SUPABASE_URL+'/rest/v1/erp_state?app_id=eq.'+KA_CLOUD_CONFIG.APP_ID+'&select=state,updated_at',{
-      headers:{'apikey':KA_CLOUD_CONFIG.SERVICE_KEY,'Authorization':'Bearer '+KA_CLOUD_CONFIG.SERVICE_KEY}
-    });
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const rows=await r.json();
-    const data=rows[0]||null;
-    if(data&&data.state&&Object.keys(data.state).length>0){
-      kaLastCloudUpdatedAt=data.updated_at;
-      kaApplyState(data.state);
-    }
-  }catch(e){
-    console.warn('Cloud load error:',e.message);
+  const {data,error}=await kaSb.from('erp_state').select('state,updated_at,updated_by').eq('app_id',KA_CLOUD_CONFIG.APP_ID).maybeSingle();
+  if(error) throw error;
+  if(data){
+    kaLastCloudUpdatedAt=data.updated_at;
+    const empty = !data.state || Object.keys(data.state).length===0;
+    if(!empty) kaApplyState(data.state);
   }
 }
 async function kaWriteCloud(force=false){
-  if(kaSyncBusy) return;
+  if(!kaUser || kaSyncBusy) return;
   kaSyncBusy=true; kaCloudStatus('Saving…','#2563eb');
   try{
     const {data:cur,error:readErr}=await kaSb.from('erp_state').select('updated_at').eq('app_id',KA_CLOUD_CONFIG.APP_ID).maybeSingle();
@@ -619,24 +611,7 @@ async function kaWriteCloud(force=false){
       if(ok){ await kaLoadCloud(); return; }
     }
     const now=new Date().toISOString();
-    // Use service key REST API for write (bypasses RLS)
-    const _wState=kaGetState();
-    const _wNow=new Date().toISOString();
-    const _wR=await fetch(KA_CLOUD_CONFIG.SUPABASE_URL+'/rest/v1/erp_state?app_id=eq.'+KA_CLOUD_CONFIG.APP_ID,{
-      method:'PATCH',
-      headers:{'apikey':KA_CLOUD_CONFIG.SERVICE_KEY,'Authorization':'Bearer '+KA_CLOUD_CONFIG.SERVICE_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
-      body:JSON.stringify({state:_wState,updated_at:_wNow,updated_by:kaUser?.id||null})
-    });
-    const _wRes=await _wR.json();
-    if(!Array.isArray(_wRes)||_wRes.length===0){
-      await fetch(KA_CLOUD_CONFIG.SUPABASE_URL+'/rest/v1/erp_state',{
-        method:'POST',
-        headers:{'apikey':KA_CLOUD_CONFIG.SERVICE_KEY,'Authorization':'Bearer '+KA_CLOUD_CONFIG.SERVICE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-        body:JSON.stringify({app_id:KA_CLOUD_CONFIG.APP_ID,state:_wState,updated_at:_wNow,updated_by:kaUser?.id||null})
-      });
-    }
-    const error = null; const now = _wNow;
-    const fake_upsert_compat={app_id:KA_CLOUD_CONFIG.APP_ID,state:kaGetLocalState(),updated_by:kaUser.id,updated_at:now});
+    const {error}=await kaSb.from('erp_state').upsert({app_id:KA_CLOUD_CONFIG.APP_ID,state:kaGetLocalState(),updated_by:kaUser.id,updated_at:now});
     if(error) throw error;
     kaLastCloudUpdatedAt=now;
     kaCloudStatus('Synced','#16a34a');
@@ -649,30 +624,39 @@ async function kaStart(){
   if(!kaReadyConfig()) return;
   kaSb=window.supabase.createClient(KA_CLOUD_CONFIG.SUPABASE_URL,KA_CLOUD_CONFIG.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
   kaMakeGate();
-  // Open ERP immediately - no login gate
+  // Open ERP immediately without login
+  kaGate(false);
   if(typeof renderAll==='function') renderAll();
-  // Try existing session
+  // Try existing session first
   const {data:sd}=await kaSb.auth.getSession();
   if(sd&&sd.session){
     await kaOnSession(sd.session);
   } else {
-    // Auto anon signin
-    try{
-      const {data:anon,error}=await kaSb.auth.signInAnonymously();
-      if(!error&&anon&&anon.session){ await kaOnSession(anon.session); }
-      else{
-        // No auth - still load cloud using service key
-        kaShowBar();
-        await kaLoadCloud();
-        kaCloudStatus('Poll sync (30s)','#f59e0b');
-      }
-    }catch(e){
+    // Auto anonymous sign-in for realtime sync
+    const {data:anon,error:ae}=await kaSb.auth.signInAnonymously().catch(()=>({data:null,error:'blocked'}));
+    if(!ae&&anon&&anon.session){
+      await kaOnSession(anon.session);
+    } else {
+      // No auth - show bar and load cloud with 30s polling
       kaShowBar();
-      await kaLoadCloud();
-      kaCloudStatus('Poll sync (30s)','#f59e0b');
+      try{ await kaLoadCloud(); }catch(e){}
+      kaCloudStatus('Connected - 30s sync','#f59e0b');
     }
   }
-  kaSb.auth.onAuthStateChange((_,session)=>{ if(session) kaOnSession(session); });
+  kaSb.auth.onAuthStateChange((_event,session)=>{ if(session) kaOnSession(session); });
+  // 30-second backup polling - always active
+  setInterval(async()=>{
+    if(!kaSb) return;
+    try{
+      const {data:p,error}=await kaSb.from('erp_state').select('state,updated_at').eq('app_id',KA_CLOUD_CONFIG.APP_ID).maybeSingle();
+      if(!error&&p&&p.updated_at&&p.updated_at!==kaLastCloudUpdatedAt&&p.state&&Object.keys(p.state).length>0){
+        kaLastCloudUpdatedAt=p.updated_at;
+        if(typeof kaApplyState==='function') kaApplyState(p.state);
+        kaCloudStatus('Team update!','#7c3aed');
+        setTimeout(()=>kaCloudStatus('Synced','#16a34a'),3000);
+      }
+    }catch(e){}
+  },30000);
 }
 async function kaOnSession(session){
   kaUser=session.user; kaGate(false); kaShowBar();
@@ -687,24 +671,6 @@ async function kaOnSession(session){
         setTimeout(()=>kaCloudStatus('Synced','#16a34a'),2500);
       }
     }).subscribe();
-  // 30-second backup poll using service key
-  setInterval(async()=>{
-    try{
-      const r=await fetch(KA_CLOUD_CONFIG.SUPABASE_URL+'/rest/v1/erp_state?app_id=eq.'+KA_CLOUD_CONFIG.APP_ID+'&select=state,updated_at',{
-        headers:{'apikey':KA_CLOUD_CONFIG.SERVICE_KEY,'Authorization':'Bearer '+KA_CLOUD_CONFIG.SERVICE_KEY}
-      });
-      if(r.ok){
-        const rows=await r.json();
-        const p=rows[0];
-        if(p&&p.updated_at&&p.updated_at!==kaLastCloudUpdatedAt&&p.state&&Object.keys(p.state).length>0){
-          kaLastCloudUpdatedAt=p.updated_at;
-          kaApplyState(p.state);
-          kaCloudStatus('Team update!','#7c3aed');
-          setTimeout(()=>kaCloudStatus('Synced','#16a34a'),3000);
-        }
-      }
-    }catch(e){}
-  },30000);
 }
 
 /* Patch the existing local save functions so every existing ERP form also saves to cloud. */
