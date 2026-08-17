@@ -498,6 +498,7 @@ const KA_CLOUD_CONFIG = {
   SUPABASE_URL: 'https://cejqcynsxrxdfaszriwy.supabase.co',
   SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlanFjeW5zeHJ4ZGZhc3pyaXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1OTg2NDUsImV4cCI6MjEwMjE3NDY0NX0.TX-V2A2siYbOsyuNITDDyS-mCWXkyfFtdwNIWaplm_k',
   APP_ID: 'kolor_store',
+  SERVICE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlanFjeW5zeHJ4ZGZhc3pyaXd5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjU5ODY0NSwiZXhwIjoyMTAyMTc0NjQ1fQ.RH1pEFQh3puxxvR6f1JftGQVsV5IaEZdsX7fQONguzc',
   APP_NAME: 'Kolor Activ Store ERP'
 };
 
@@ -601,7 +602,7 @@ async function kaLoadCloud(){
   }
 }
 async function kaWriteCloud(force=false){
-  if(!kaUser || kaSyncBusy) return;
+  if(kaSyncBusy) return;
   kaSyncBusy=true; kaCloudStatus('Saving…','#2563eb');
   try{
     const {data:cur,error:readErr}=await kaSb.from('erp_state').select('updated_at').eq('app_id',KA_CLOUD_CONFIG.APP_ID).maybeSingle();
