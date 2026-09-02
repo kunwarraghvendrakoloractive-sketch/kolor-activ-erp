@@ -2499,7 +2499,7 @@
         tbody.innerHTML += `
           <tr>
             <td class="font-mono text-xs font-bold text-blue-800">${l.batch}</td>
-            <td>${l.product} (${l.stage})</td>
+            <td>${l.productName||l.product} (${l.stage})</td>
             <td class="text-xs">${l.line}</td>
             <td class="text-xs text-gray-500">${l.date}</td>
             <td><span class="badge ${l.qcStatus === 'QC Passed' ? 'badge-suc' : 'badge-wrn'}">${l.qcStatus}</span></td>
