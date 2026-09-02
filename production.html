@@ -2353,6 +2353,7 @@
         line: document.getElementById('prod-line').value,
         stage: document.getElementById('prod-stage').value,
         product: document.getElementById('prod-name').value,
+        productName: document.getElementById('prod-name').options[document.getElementById('prod-name').selectedIndex]?.text || document.getElementById('prod-name').value,
         sku: document.getElementById('prod-sku').value.trim(),
         target: Number(document.getElementById('prod-target').value),
         units: Number(document.getElementById('prod-units').value),
