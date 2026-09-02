@@ -4439,9 +4439,7 @@ async function kaWriteCloud(force=false){
     const {data:cur,error:readErr}=await kaSb.from('erp_state').select('updated_at').eq('app_id',KA_CLOUD_CONFIG.APP_ID).maybeSingle();
     if(readErr) throw readErr;
     if(!force && cur?.updated_at && kaLastCloudUpdatedAt && cur.updated_at!==kaLastCloudUpdatedAt){
-      const ok=confirm('Another user changed this ERP after your last sync. Reload the latest cloud data? Press Cancel only if you intentionally want to overwrite it.');
-      if(ok){ await kaLoadCloud(); return; }
-    }
+  await kaLoadCloud(); return;}
     const now=new Date().toISOString();
     const {error}=await kaSb.from('erp_state').upsert({app_id:KA_CLOUD_CONFIG.APP_ID,state:kaGetLocalState(),updated_by:kaUser.id,updated_at:now});
     if(error) throw error;
