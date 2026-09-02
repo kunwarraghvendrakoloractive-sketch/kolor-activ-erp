@@ -4429,7 +4429,7 @@ async function kaLoadCloud(){
   if(data){
     kaLastCloudUpdatedAt=data.updated_at;
     const empty = !data.state || Object.keys(data.state).length===0;
-    if(!empty) kaApplyState(data.state);
+    if(!empty){const ct=new Date(data.updated_at).getTime();const lt=parseInt(localStorage.getItem('ka_cloud_ts')||'0');if(ct>lt) kaApplyState(data.state);}
   }
 }
 async function kaWriteCloud(force=false){
@@ -4445,7 +4445,7 @@ async function kaWriteCloud(force=false){
     const now=new Date().toISOString();
     const {error}=await kaSb.from('erp_state').upsert({app_id:KA_CLOUD_CONFIG.APP_ID,state:kaGetLocalState(),updated_by:kaUser.id,updated_at:now});
     if(error) throw error;
-    kaLastCloudUpdatedAt=now;
+    kaLastCloudUpdatedAt=now;localStorage.setItem('ka_cloud_ts',new Date(now).getTime().toString());
     kaCloudStatus('Synced','#16a34a');
   }catch(e){console.error(e);kaCloudStatus('Sync error','#dc2626');}
   finally{kaSyncBusy=false;}
@@ -4492,7 +4492,7 @@ async function kaStart(){
 }
 async function kaOnSession(session){
   kaUser=session.user; kaGate(false); kaShowBar();
-  try{await kaLoadCloud();}catch(e){kaCloudStatus('Database error','#dc2626');alert('Cloud database error: '+(e.message||e));}
+  try{await kaLoadCloud();}catch(e){kaCloudStatus('Database error','#dc2626');}
   if(kaRemoteChannel) kaSb.removeChannel(kaRemoteChannel);
   kaRemoteChannel=kaSb.channel('ka-'+KA_CLOUD_CONFIG.APP_ID)
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'erp_state',filter:'app_id=eq.'+KA_CLOUD_CONFIG.APP_ID},payload=>{
