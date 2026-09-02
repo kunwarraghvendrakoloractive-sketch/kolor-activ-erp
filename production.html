@@ -2121,7 +2121,7 @@
             <tr>
               <td class="font-mono text-xs font-semibold text-blue-800">${l.batch}</td>
               <td>
-                <div class="font-medium text-gray-900">${l.product}</div>
+                <div class="font-medium text-gray-900">${l.productName||l.product}</div>
                 <div class="text-xs text-gray-400">${l.stage}</div>
               </td>
               <td class="text-xs">${l.line}</td>
@@ -2468,7 +2468,7 @@
             <td class="text-xs text-gray-500">${l.date}</td>
             <td class="font-mono text-xs font-bold text-blue-800">${l.batch}</td>
             <td>
-              <div class="font-medium text-gray-900">${l.product}</div>
+              <div class="font-medium text-gray-900">${l.productName||l.product}</div>
               <div class="text-xs text-gray-400">${l.stage}</div>
             </td>
             <td class="text-xs">${l.line}</td>
@@ -2972,7 +2972,7 @@
         tbody.innerHTML += `
           <tr>
             <td class="font-mono text-xs font-bold text-blue-800">${l.batch}</td>
-            <td>${l.product}</td>
+            <td>${l.productName||l.product}</td>
             <td class="text-xs text-gray-500">${l.date}</td>
             <td>${l.units} / ${l.target}</td>
             <td class="text-xs">${l.operator}</td>
@@ -2990,7 +2990,7 @@
       let csv = "ID,Batch,Lot,Date,Shift,Line,Stage,Product,SKU,Target,Units,Rejected,DefectReason,StartTime,EndTime,Downtime,DowntimeReason,Supervisor,Operator,QCStatus,Status,Remarks\n";
       
       APP_STATE.logs.forEach(l => {
-        csv += `"${l.id}","${l.batch}","${l.lot}","${l.date}","${l.shift}","${l.line}","${l.stage}","${l.product}","${l.sku}",${l.target},${l.units},${l.rejected},"${l.defectReason}","${l.startTime}","${l.endTime}",${l.downtime},"${l.downtimeReason}","${l.supervisor}","${l.operator}","${l.qcStatus}","${l.status}","${l.remarks}"\n`;
+        csv += `"${l.id}","${l.batch}","${l.lot}","${l.date}","${l.shift}","${l.line}","${l.stage}","${l.productName||l.product}","${l.sku}",${l.target},${l.units},${l.rejected},"${l.defectReason}","${l.startTime}","${l.endTime}",${l.downtime},"${l.downtimeReason}","${l.supervisor}","${l.operator}","${l.qcStatus}","${l.status}","${l.remarks}"\n`;
       });
 
       const blob = new Blob([csv], { type: 'text/csv' });
@@ -3017,7 +3017,7 @@
 
       let csv = "Batch,Date,Product,Line,Units,Target,QCStatus,Operator\n";
       list.forEach(l => {
-        csv += `"${l.batch}","${l.date}","${l.product}","${l.line}",${l.units},${l.target},"${l.qcStatus}","${l.operator}"\n`;
+        csv += `"${l.batch}","${l.date}","${l.productName||l.product}","${l.line}",${l.units},${l.target},"${l.qcStatus}","${l.operator}"\n`;
       });
 
       const blob = new Blob([csv], { type: 'text/csv' });
@@ -3052,7 +3052,7 @@
               ${APP_STATE.logs.map(l => `
                 <tr>
                   <td>${l.batch}</td>
-                  <td>${l.product}</td>
+                  <td>${l.productName||l.product}</td>
                   <td>${l.line}</td>
                   <td>${l.shift}</td>
                   <td>${l.target}</td>
