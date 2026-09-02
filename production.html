@@ -4481,7 +4481,7 @@ async function kaStart(){
       const {data:p,error}=await kaSb.from('erp_state').select('state,updated_at').eq('app_id',KA_CLOUD_CONFIG.APP_ID).maybeSingle();
       if(!error&&p&&p.updated_at&&p.updated_at!==kaLastCloudUpdatedAt&&p.state&&Object.keys(p.state).length>0){
         kaLastCloudUpdatedAt=p.updated_at;
-        if(typeof kaApplyState==='function') kaApplyState(p.state);
+        const ct=new Date(p.updated_at).getTime();const lt=parseInt(localStorage.getItem('ka_cloud_ts')||'0');if(ct>lt&&typeof kaApplyState==='function') kaApplyState(p.state);
         kaCloudStatus('Team update!','#7c3aed');
         setTimeout(()=>kaCloudStatus('Synced','#16a34a'),3000);
       }
@@ -4496,7 +4496,7 @@ async function kaOnSession(session){
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'erp_state',filter:'app_id=eq.'+KA_CLOUD_CONFIG.APP_ID},payload=>{
       if(payload.new && payload.new.state && payload.new.updated_at!==kaLastCloudUpdatedAt){
         kaLastCloudUpdatedAt=payload.new.updated_at;
-        kaApplyState(payload.new.state);
+        const ct2=new Date(payload.new.updated_at).getTime();const lt2=parseInt(localStorage.getItem('ka_cloud_ts')||'0');if(ct2>lt2) kaApplyState(payload.new.state);
         kaCloudStatus('Updated from team','#7c3aed');
         setTimeout(()=>kaCloudStatus('Synced','#16a34a'),2500);
       }
