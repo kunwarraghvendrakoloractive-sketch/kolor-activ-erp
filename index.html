@@ -216,8 +216,13 @@
     .activity-bar-body { padding: 0 14px 14px; display: none; }
     .activity-bar.open .activity-bar-body { display: block; }
     .inline-tag { display: inline-block; background: var(--surf0); border: 0.5px solid var(--bdr2); border-radius: 4px; padding: 2px 6px; font-size: 11px; color: var(--ink2); margin: 2px; }
+  @media (max-width: 640px) {
+      .production-mp-row { grid-template-columns: 1fr !important; }
+      .production-mp-row button { width:100%; }
+    }
   </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>window.EXCEL_OPERATOR_ENTRY_DATA=[{"id":"excel-op-1","name":"Rukhsar","role":"Filling Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-2","name":"Kehkasa","role":"Filling Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-3","name":"Mantasha","role":"Filling Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-4","name":"Monu Khan","role":"Filling Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-5","name":"Abdul Kalam","role":"Filling Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-6","name":"Sahishta","role":"Filling Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-7","name":"Kehkasha","role":"Filling Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-8","name":"Sayama","role":"Packing Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-9","name":"Shaveen","role":"Packing Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-10","name":"Fiza","role":"Packing Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-11","name":"Sharheen","role":"Packing Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-12","name":"Ikra","role":"Packing Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-13","name":"Preeti Ahirwar","role":"Packing Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-14","name":"Amana","role":"Packing Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-15","name":"Farida Begam","role":"Packing Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-16","name":"Hamda Begum","role":"Packing Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-17","name":"Ilma (Muskan)","role":"Packing Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-18","name":"Fiza (New)","role":"Packing Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-19","name":"Muskan Bi","role":"Packing Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-20","name":"Shahin","role":"Labelling Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-21","name":"Sweta Kumari","role":"Labelling Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-22","name":"Khusbu Raikwar","role":"Labelling Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-23","name":"Sana (New)","role":"Assembly Line Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-24","name":"Dharmendar Ahirwar","role":"Assembly Line Operator","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-25","name":"Ramesh","role":"Helper","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-26","name":"Sanju Devi","role":"Helper","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-27","name":"Nisrat Bi","role":"Helper","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-28","name":"Shama Bee","role":"Helper","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-29","name":"Reshma","role":"Helper","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-30","name":"Rubi Khan","role":"Helper","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-31","name":"Sohil Khan","role":"Helper","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-32","name":"Jaya","role":"Helper","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-33","name":"Shabnam Husain","role":"Helper","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-34","name":"Sohan Kumar","role":"Helper","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-35","name":"Shiba","role":"Helper","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-36","name":"Shna","role":"Helper","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-37","name":"Sangita Devi","role":"Helper","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-38","name":"Baby","role":"Helper","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-39","name":"Shaahida","role":"Helper","line":"All","shift":"Regular","status":"Active"},{"id":"excel-op-40","name":"Triveni","role":"Helper","line":"All","shift":"Regular","status":"Active"}];</script>
 </head>
 <body>
 
@@ -289,8 +294,11 @@
             <span id="host-btn-label">Host Mode: OFF</span>
           </button>
           
-          <button class="btn btn-primary btn-sm" onclick="manualSync()">
-            <i class="ti ti-refresh"></i> Sync Data
+          <button class="btn btn-primary btn-sm" onclick="refreshApplication()">
+            <i class="ti ti-refresh"></i> Refresh
+          </button>
+          <button class="btn btn-sm" onclick="manualSync()">
+            <i class="ti ti-cloud-upload"></i> Save / Sync
           </button>
         </div>
       </div>
@@ -426,7 +434,6 @@
                   <strong>SOP Batch Standard:</strong> <code>[Company]-[LineCode]-[DDMMYY]-[ShiftCode]-[Seq]</code>
                   <div class="text-gray-500 mt-0.5">Example: KA-L1-050826-R-001 (Kolor Activ · Line · Date · Regular Shift · Seq 001)</div>
                 </div>
-                <button type="button" class="btn btn-sm" onclick="genBatchForForm()"><i class="ti ti-wand"></i> Auto-Generate SOP Code</button>
               </div>
 
               <form id="prod-entry-form" onsubmit="handleSaveProduction(event)">
@@ -436,10 +443,8 @@
                   <!-- Section 1: Batch Identification & SOP -->
                   <div class="form-group">
                     <label>SOP Batch Number *</label>
-                    <div class="flex gap-2">
-                      <input type="text" id="batch-field" placeholder="KA-L1-050826-R-001" required font-mono>
-                      <button type="button" class="btn btn-sm" onclick="genBatchForForm()">SOP</button>
-                    </div>
+                    <input type="text" id="batch-field" placeholder="Enter SOP batch number manually, e.g. KA-L1-050826-R-001" required font-mono>
+                    <div class="text-xs text-gray-500 mt-1">Manual entry only. No automatic SOP batch generation or sequence increment.</div>
                   </div>
 
                   <div class="form-group">
@@ -449,21 +454,21 @@
 
                   <div class="form-group">
                     <label>Date *</label>
-                    <input type="date" id="prod-date" required onchange="genBatchForForm()">
+                    <input type="date" id="prod-date" required>
                   </div>
 
                   <div class="form-group">
                     <label>Shift *</label>
-                    <select id="prod-shift" required onchange="genBatchForForm()">
+                    <select id="prod-shift" required>
                       <option value="Regular">Regular Shift (09:30 AM – 06:00 PM)</option>
                       <option value="Overtime">Overtime Shift</option>
                     </select>
                   </div>
 
                   <div class="form-group">
-                    <label>Production Line *</label>
-                    <select id="prod-line" required onchange="genBatchForForm()">
-                      <!-- Dynamic options -->
+                    <label>Production Line * <button type="button" class="btn btn-sm host-only" style="float:right" onclick="openLinesModal()"><i class="ti ti-settings"></i> Add / Delete Line</button></label>
+                    <select id="prod-line" required>
+                      <!-- Dynamic active production lines -->
                     </select>
                   </div>
 
@@ -479,10 +484,10 @@
                   </div>
 
                   <div class="form-group">
-                    <label>Product Name *</label>
-                    <select id="prod-name" onchange="autoFillSku()" required>
-                      <!-- Dynamic products -->
-                    </select>
+                    <label>Product Name * <span class="text-xs text-gray-400">(Search)</span></label>
+                    <input id="prod-name" list="production-product-options" placeholder="Search Product Name / Shade / Category" autocomplete="off" oninput="autoFillSku()" required>
+                    <datalist id="production-product-options"></datalist>
+                    <input type="hidden" id="prod-product-id">
                   </div>
 
                   <div class="form-group">
@@ -558,10 +563,16 @@
                   </div>
 
                   <div class="form-group">
-                    <label>Operator *</label>
-                    <select id="prod-operator" required>
-                      <!-- Dynamic operators -->
-                    </select>
+                    <label>Operator * <span class="text-xs text-gray-400">(Search)</span></label>
+                    <input id="prod-operator" list="production-operator-options" placeholder="Search operator name / role / line" autocomplete="off" required>
+                    <datalist id="production-operator-options"></datalist>
+                  </div>
+
+                  <div class="form-group" style="grid-column:1/-1">
+                    <label>Additional Manpower</label>
+                    <div id="production-additional-manpower" style="display:grid;gap:8px"></div>
+                    <button type="button" class="btn btn-sm" onclick="addProductionManpowerRow()"><i class="ti ti-plus"></i> Add Additional Manpower</button>
+                    <div class="text-xs text-gray-400 mt-1">Add Helpers, Packers, QC, Supervisors or other manpower working on this production run.</div>
                   </div>
 
                   <div class="form-group">
@@ -635,14 +646,11 @@
         <div class="page" id="page-batch">
           <div class="batch-display">
             <div>
-              <div style="font-size:12px;opacity:.8;margin-bottom:6px;letter-spacing:.05em">SOP-PRD-004 COMPLIANT BATCH CODE</div>
-              <div class="batch-num" id="current-batch">KA-L1-050826-M-001</div>
-              <div style="font-size:12px;opacity:.8;margin-top:6px" id="batch-format-hint">SOP Structure: Company - LineCode - Date(DDMMYY) - ShiftCode - Sequence</div>
+              <div style="font-size:12px;opacity:.8;margin-bottom:6px;letter-spacing:.05em">SOP-PRD-004 BATCH REGISTER</div>
+              <div class="batch-num">MANUAL SOP BATCH ENTRY</div>
+              <div style="font-size:12px;opacity:.8;margin-top:6px">SOP Standard: Company - LineCode - Date(DDMMYY) - ShiftCode - Sequence</div>
             </div>
-            <div class="flex flex-wrap gap-2">
-              <button class="btn" style="background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.3);color:#fff" onclick="genBatch()"><i class="ti ti-refresh"></i> Generate Next</button>
-              <button class="btn" style="background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.3);color:#fff" onclick="copyBatch()"><i class="ti ti-copy"></i> Copy Code</button>
-            </div>
+            <div class="text-sm" style="opacity:.9">Batch numbers are entered by the authorized user.</div>
           </div>
 
           <!-- SOP Rule Standard Explanation -->
@@ -673,39 +681,12 @@
           </div>
 
           <div class="card">
-            <div class="card-title">
-              <span>Batch Generator SOP Configuration</span>
-              <span class="badge badge-gray host-only-inline">Host Controlled</span>
+            <div class="card-title">Manual SOP Batch Entry Policy</div>
+            <div class="text-sm text-gray-700 space-y-2">
+              <p><strong>Required standard:</strong> <code>[Company]-[LineCode]-[DDMMYY]-[ShiftCode]-[Seq]</code></p>
+              <p><strong>Example:</strong> <code>KA-L1-050826-R-001</code> (Kolor Activ · Line · Date · Regular Shift · Seq 001)</p>
+              <p>Enter the complete SOP batch number manually in the Production Entry form. The system will not generate, overwrite, preview, or increment the batch sequence automatically.</p>
             </div>
-            <form id="batch-config-form" onsubmit="handleSaveBatchConfig(event)">
-              <div class="form-grid">
-                <div class="form-group">
-                  <label>Company Prefix Code</label>
-                  <input type="text" id="cfg-prefix" value="KA" required>
-                </div>
-                <div class="form-group">
-                  <label>Date Format in SOP</label>
-                  <select id="cfg-date-format">
-                    <option value="DDMMYY">DDMMYY (e.g. 050826)</option>
-                    <option value="DDMM">DDMM (e.g. 0508)</option>
-                    <option value="YYYYMMDD">YYYYMMDD (e.g. 20260805)</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label>Current Sequence Counter</label>
-                  <input type="number" id="cfg-seq" value="1" min="1" required>
-                </div>
-                <div class="form-group">
-                  <label>Sequence Digits Pad</label>
-                  <select id="cfg-digits">
-                    <option value="3">3 digits (001)</option>
-                    <option value="4">4 digits (0001)</option>
-                    <option value="2">2 digits (01)</option>
-                  </select>
-                </div>
-              </div>
-              <button type="submit" class="btn btn-primary host-only"><i class="ti ti-device-floppy"></i> Save SOP Settings</button>
-            </form>
           </div>
 
           <div class="card">
@@ -1031,14 +1012,14 @@
 
           <div class="row2">
             <div class="card">
-              <div class="card-title">Operator-wise Labour Summary</div>
+              <div class="card-title">Every Labour Type & Employee Summary</div>
               <div class="overflow-x-auto">
                 <table>
                   <thead>
                     <tr>
-                      <th>Operator</th><th>Role</th><th>Line</th>
-                      <th>Days Worked</th><th>Total Hours</th><th>Units Produced</th>
-                      <th>Units / Hour</th><th>Efficiency %</th>
+                      <th>Employee / Labour</th><th>Role / Labour Type</th><th>Line</th>
+                      <th>Days Worked</th><th>Total Hours</th><th>OT Hours</th><th>Units Produced</th>
+                      <th>Units / Hour</th><th>Efficiency %</th><th>Labour Cost</th>
                     </tr>
                   </thead>
                   <tbody id="labour-summary-tbody"></tbody>
@@ -1094,6 +1075,7 @@
             <div class="section-title">Employee Skill Matrix</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <button class="btn btn-primary host-only" onclick="openSkillEditModal()"><i class="ti ti-pencil"></i> Edit Skills</button>
+              <button class="btn btn-sm host-only" onclick="openAddSkill()"><i class="ti ti-plus"></i> Add Skill</button>
               <button class="btn btn-sm" onclick="exportSkillMatrixCSV()"><i class="ti ti-download"></i> Export CSV</button>
             </div>
           </div>
@@ -1184,7 +1166,7 @@
         <!-- ====== PERFORMANCE DASHBOARD PAGE ====== -->
         <div class="page" id="page-performance">
           <div class="section-header">
-            <div class="section-title">Performance Dashboard</div>
+            <div class="section-title">All Manpower Performance Dashboard</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <select id="perf-period" onchange="renderPerformancePage()" style="font-size:12px;padding:5px 8px">
                 <option value="today">Today</option>
@@ -1204,7 +1186,7 @@
             <div class="kpi-card">
               <div class="kpi-label">Top Performer</div>
               <div class="kpi-val" style="font-size:16px" id="perf-top-operator">—</div>
-              <div class="kpi-delta delta-up"><i class="ti ti-medal"></i> Highest units output</div>
+              <div class="kpi-delta delta-up"><i class="ti ti-medal"></i> Highest manpower units output</div>
             </div>
             <div class="kpi-card">
               <div class="kpi-label">Line Efficiency</div>
@@ -1219,7 +1201,7 @@
           </div>
 
           <div class="card">
-            <div class="card-title">Operator Performance Cards</div>
+            <div class="card-title">All Manpower Performance</div>
             <div class="perf-grid" id="perf-operator-grid">
               <!-- Dynamic performance cards -->
             </div>
@@ -1401,7 +1383,8 @@
         <button class="btn btn-sm" onclick="closeModal('modal-lines')"><i class="ti ti-x"></i></button>
       </div>
       <form onsubmit="handleSaveLine(event)" class="mb-4 flex gap-2">
-        <input type="text" id="new-line-name" placeholder="Line C, Packaging 2..." class="flex-1 text-xs" required>
+        <input type="text" id="new-line-name" placeholder="Line name, e.g. Lipstick Assembly Line" class="flex-1 text-xs" required>
+        <input type="text" id="new-line-code" placeholder="Code e.g. L9" style="width:110px" class="text-xs" required>
         <button type="submit" class="btn btn-primary btn-sm"><i class="ti ti-plus"></i> Add Line</button>
       </form>
       <div class="overflow-x-auto">
@@ -1409,6 +1392,7 @@
           <thead>
             <tr>
               <th>Line Name</th>
+              <th>Line Code</th>
               <th>Status</th>
               <th class="text-right">Action</th>
             </tr>
@@ -1793,6 +1777,7 @@
     // Application Global Runtime State
     let APP_STATE = {};
     let isHostMode = false;
+    try { isHostMode = sessionStorage.getItem('ka_host_mode') === '1'; } catch(e) {}
     let chartWeek = null;
     let chartKpi = null;
     let chartProd = null;
@@ -1896,7 +1881,7 @@
       const titleMap = {
         'dashboard': 'Dashboard',
         'form': 'Log Production Run',
-        'batch': 'SOP Batch Generator',
+        'batch': 'SOP Batch Register',
         'supervisors': 'Plant Supervisors Master',
         'operators': 'Machine Operators Master',
         'products': 'Products & Catalog Master',
@@ -1915,7 +1900,7 @@
 
       // Refresh page specific views
       if (pageId === 'dashboard') renderDashboard();
-      if (pageId === 'form') { renderFormSelects(); genBatchForForm(); renderRecentEntriesTable(); }
+      if (pageId === 'form') { renderFormSelects(); renderRecentEntriesTable(); }
       if (pageId === 'batch') renderBatchRegister();
       if (pageId === 'supervisors') renderSupervisors();
       if (pageId === 'operators') renderOperators();
@@ -1959,6 +1944,7 @@
     function toggleHostMode() {
       if (isHostMode) {
         isHostMode = false;
+        try { sessionStorage.removeItem('ka_host_mode'); } catch(e) {}
         updateHostUI();
         showToast("Host Mode Deactivated. Standard User View.");
       } else {
@@ -1969,10 +1955,11 @@
     }
 
     function verifyHostPin() {
-      const enteredPin = document.getElementById('host-pin-input').value.trim();
+      const enteredPin = (document.getElementById('host-pin-input')?.value || '').trim();
       const actualPin = (APP_STATE.taskConfig && APP_STATE.taskConfig.hostPin) ? APP_STATE.taskConfig.hostPin : '1234';
       if (enteredPin === actualPin) {
         isHostMode = true;
+        try { sessionStorage.setItem('ka_host_mode','1'); } catch(e) {}
         closeModal('modal-host');
         updateHostUI();
         showToast("Host Authorized Successfully! Full Controls Unlocked.");
@@ -2021,63 +2008,6 @@
       } else {
         stepHeader.classList.add('hidden');
       }
-    }
-
-    function genBatchCode(lineId, shiftName, dateStr) {
-      const cfg = APP_STATE.batchConfig;
-      const prefix = cfg.prefix || 'KA';
-      
-      // Line Code lookup
-      const lineObj = APP_STATE.lines.find(l => l.name === lineId || l.id === lineId || l.code === lineId);
-      const lineCode = lineObj ? lineObj.code : 'L1';
-
-      // Date Format DDMMYY
-      let formattedDate = '050826';
-      if (dateStr) {
-        const parts = dateStr.split('-'); // YYYY-MM-DD
-        if (parts.length === 3) {
-          const yy = parts[0].substring(2);
-          const mm = parts[1];
-          const dd = parts[2];
-          formattedDate = `${dd}${mm}${yy}`;
-        }
-      }
-
-      // Shift Code
-      let shiftCode = 'R';
-      if (shiftName === 'Overtime') shiftCode = 'OT';
-
-      // Sequence
-      const padLen = parseInt(cfg.digits || 3);
-      const seqStr = String(cfg.seq || 1).padStart(padLen, '0');
-
-      return `${prefix}-${lineCode}-${formattedDate}-${shiftCode}-${seqStr}`;
-    }
-
-    function genBatch() {
-      const code = genBatchCode('L1', 'Regular', getTodayStr());
-      document.getElementById('current-batch').innerText = code;
-      // Increment sequence in preview
-      APP_STATE.batchConfig.seq = (APP_STATE.batchConfig.seq || 1) + 1;
-      saveState();
-      renderBatchRegister();
-    }
-
-    function genBatchForForm() {
-      const lineVal = document.getElementById('prod-line').value;
-      const shiftVal = document.getElementById('prod-shift').value;
-      const dateVal = document.getElementById('prod-date').value || getTodayStr();
-      const code = genBatchCode(lineVal, shiftVal, dateVal);
-      document.getElementById('batch-field').value = code;
-    }
-
-    function copyBatch() {
-      const txt = document.getElementById('current-batch').innerText;
-      navigator.clipboard.writeText(txt).then(() => {
-        showToast(`Copied batch code: ${txt}`);
-      }).catch(() => {
-        showToast("Code copied!");
-      });
     }
 
     function renderDashboard() {
@@ -2277,20 +2207,20 @@
       const lineSel = document.getElementById('prod-line');
       if (lineSel) {
         lineSel.innerHTML = '<option value="">Select Production Line</option>' +
-          lines.map(l =>
+          lines.filter(l => l.status !== 'Inactive' && l.status !== 'Archived').map(l =>
             `<option value="${escapeHtml(l.name)}">${escapeHtml(l.name)} (${escapeHtml(l.code || '')})</option>`
           ).join('');
       }
 
-      // Product Name — use product ID as the option value so duplicate
-      // product names/shades remain separate records.
-      const prodSel = document.getElementById('prod-name');
-      if (prodSel) {
-        prodSel.innerHTML = '<option value="">Select Product</option>' +
-          products.map(p => {
-            const shade = p.sku ? ` — Shade/Code: ${escapeHtml(p.sku)}` : '';
-            return `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)}${shade}</option>`;
-          }).join('');
+      // Searchable Product Name selector. The visible value is Product Name;
+      // internal product id is stored separately.
+      const prodInput = document.getElementById('prod-name');
+      const prodList = document.getElementById('production-product-options');
+      if (prodInput && prodList) {
+        prodList.innerHTML = products.filter(p => p.status !== 'Inactive' && p.status !== 'Archived').map(p => {
+          const shade = p.sku ? ` — ${p.sku}` : '';
+          return `<option value="${escapeHtml(p.name)}${escapeHtml(shade)}">${escapeHtml(p.category || '')}</option>`;
+        }).join('');
       }
 
       // Supervisor
@@ -2302,13 +2232,13 @@
           ).join('');
       }
 
-      // Operator
-      const opSel = document.getElementById('prod-operator');
-      if (opSel) {
-        opSel.innerHTML = '<option value="">Select Operator</option>' +
-          operators.map(o =>
-            `<option value="${escapeHtml(o.name)}">${escapeHtml(o.name)} - ${escapeHtml(o.role || '')}</option>`
-          ).join('');
+      // Searchable Operator selector
+      const opInput = document.getElementById('prod-operator');
+      const opList = document.getElementById('production-operator-options');
+      if (opInput && opList) {
+        opList.innerHTML = operators.filter(o => o.status === 'Active' || !o.status).map(o =>
+          `<option value="${escapeHtml(o.name)}">${escapeHtml(o.role || '')} — ${escapeHtml(o.line || '')}</option>`
+        ).join('');
       }
 
       const dateEl = document.getElementById('prod-date');
@@ -2324,14 +2254,106 @@
     }
 
     function autoFillSku() {
-      const select = document.getElementById('prod-name');
+      const input = document.getElementById('prod-name');
       const skuEl = document.getElementById('prod-sku');
-      if (!select || !skuEl) return;
-
-      const prod = (APP_STATE.products || []).find(p => p.id === select.value);
+      const idEl = document.getElementById('prod-product-id');
+      if (!input || !skuEl) return;
+      const raw = (input?.value || '').trim();
+      const prod = (APP_STATE.products || []).find(p => p.name === raw || `${p.name} — ${p.sku || ''}`.trim() === raw);
       skuEl.value = prod ? (prod.sku || '') : '';
+      if (idEl) idEl.value = prod ? prod.id : '';
     }
 
+    function getAllManpowerNameOptions() {
+      const names = new Map();
+
+      // Current Operator Master (including the 40 names imported from Excel)
+      (APP_STATE.operators || []).forEach(o => {
+        const name = String(o?.name || '').trim();
+        if (name) names.set(name.toLowerCase(), {
+          name,
+          role: o.role || 'Operator',
+          line: o.line || o.assignedLine || 'All',
+          shift: o.shift || 'Regular'
+        });
+      });
+
+      // Supervisor Master
+      (APP_STATE.supervisors || []).forEach(s => {
+        const name = String(s?.name || '').trim();
+        if (name && !names.has(name.toLowerCase())) names.set(name.toLowerCase(), {
+          name,
+          role: s.role || 'Supervisor',
+          line: s.line || s.assignedLine || 'All',
+          shift: s.shift || 'Regular'
+        });
+      });
+
+      // Existing named manpower entries, so historical names remain selectable.
+      (APP_STATE.manpowerLogs || []).forEach(m => {
+        (Array.isArray(m?.workerNames) ? m.workerNames : []).forEach(n => {
+          const name = String(n || '').trim();
+          if (name && !names.has(name.toLowerCase())) names.set(name.toLowerCase(), {
+            name, role: m.workerType || 'Other', line: m.line || 'All', shift: m.shift || 'Regular'
+          });
+        });
+        const worker = String(m?.worker || '').trim();
+        if (worker && !names.has(worker.toLowerCase())) names.set(worker.toLowerCase(), {
+          name: worker, role: m.workerType || 'Other', line: m.line || 'All', shift: m.shift || 'Regular'
+        });
+      });
+
+      return Array.from(names.values()).sort((a,b) => a.name.localeCompare(b.name));
+    }
+
+    function addProductionManpowerRow(data = {}) {
+      const box = document.getElementById('production-additional-manpower');
+      if (!box) return;
+
+      const row = document.createElement('div');
+      row.className = 'production-mp-row';
+      row.style.cssText = 'display:grid;grid-template-columns:1.1fr 1.6fr .7fr auto;gap:8px;align-items:center';
+
+      const options = Object.keys(WORKER_TYPE_CONFIG || {}).map(t =>
+        `<option value="${escapeHtml(t)}" ${data.type===t?'selected':''}>${escapeHtml(t)}</option>`
+      ).join('');
+
+      const listId = 'production-manpower-name-options';
+      row.innerHTML = `<select class="prod-mp-type">${options}</select>
+        <input class="prod-mp-name" list="${listId}" autocomplete="off"
+          placeholder="Select or type employee / manpower name"
+          value="${escapeHtml(data.name || '')}">
+        <input class="prod-mp-hours" type="number" min="0" step="0.25" placeholder="Hours" value="${data.hours ?? ''}">
+        <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.production-mp-row').remove()"><i class="ti ti-trash"></i></button>`;
+      box.appendChild(row);
+
+      // One shared datalist for every additional-manpower row.
+      let dl = document.getElementById(listId);
+      if (!dl) {
+        dl = document.createElement('datalist');
+        dl.id = listId;
+        document.body.appendChild(dl);
+      }
+      dl.innerHTML = getAllManpowerNameOptions().map(x =>
+        `<option value="${escapeHtml(x.name)}">${escapeHtml(x.role)} — ${escapeHtml(x.line)} — ${escapeHtml(x.shift)}</option>`
+      ).join('');
+    }
+
+    function collectProductionManpower() {
+      return Array.from(document.querySelectorAll('.production-mp-row')).map(row => ({
+        type: row.querySelector('.prod-mp-type')?.value || 'Other',
+        name: (row.querySelector('.prod-mp-name')?.value || '').trim(),
+        hours: Number(row.querySelector('.prod-mp-hours')?.value || 0)
+      })).filter(x => x.name || x.hours > 0);
+    }
+
+    function selectTaskStageollectProductionManpower() {
+      return Array.from(document.querySelectorAll('.production-mp-row')).map(row => ({
+        type: row.querySelector('.prod-mp-type')?.value || 'Other',
+        name: row.querySelector('.prod-mp-name')?.value.trim() || '',
+        hours: Number(row.querySelector('.prod-mp-hours')?.value || 0)
+      })).filter(x => x.name || x.hours > 0);
+    }
 
     function selectTaskStage(stageName) {
       document.getElementById('prod-stage').value = stageName;
@@ -2346,14 +2368,15 @@
 
       const logObj = {
         id: editId || 'LOG-' + Date.now(),
-        batch: document.getElementById('batch-field').value.trim(),
-        lot: document.getElementById('prod-lot').value.trim(),
+        batch: (document.getElementById('batch-field')?.value || '').trim(),
+        lot: (document.getElementById('prod-lot')?.value || '').trim(),
         date: document.getElementById('prod-date').value,
         shift: document.getElementById('prod-shift').value,
         line: document.getElementById('prod-line').value,
         stage: document.getElementById('prod-stage').value,
-        product: document.getElementById('prod-name').value,
-        sku: document.getElementById('prod-sku').value.trim(),
+        product: (document.getElementById('prod-name')?.value || '').trim(),
+        productId: document.getElementById('prod-product-id')?.value || '',
+        sku: (document.getElementById('prod-sku')?.value || '').trim(),
         target: Number(document.getElementById('prod-target').value),
         units: Number(document.getElementById('prod-units').value),
         rejected: Number(document.getElementById('prod-rejected').value || 0),
@@ -2363,11 +2386,18 @@
         downtime: Number(document.getElementById('prod-downtime').value || 0),
         downtimeReason: document.getElementById('prod-downtime-reason').value,
         supervisor: document.getElementById('prod-supervisor').value,
-        operator: document.getElementById('prod-operator').value,
+        operator: (document.getElementById('prod-operator')?.value || '').trim(),
+        additionalManpower: collectProductionManpower(),
         qcStatus: document.getElementById('prod-qc-status').value,
         status: document.getElementById('prod-status').value,
-        remarks: document.getElementById('prod-remarks').value.trim()
+        remarks: (document.getElementById('prod-remarks')?.value || '').trim()
       };
+
+      if (!logObj.batch) { showToast('SOP Batch Number is required and must be entered manually.', 'danger'); return; }
+      if (!logObj.line) { showToast('Production Line is required.', 'danger'); return; }
+      if (!logObj.product) { showToast('Product Name is required.', 'danger'); return; }
+      if (!logObj.operator) { showToast('Operator is required.', 'danger'); return; }
+      if (!Number.isFinite(logObj.target) || logObj.target < 0 || !Number.isFinite(logObj.units) || logObj.units < 0 || !Number.isFinite(logObj.rejected) || logObj.rejected < 0) { showToast('Target, actual and rejected quantities must be valid non-negative numbers.', 'danger'); return; }
 
       if (editId) {
         const idx = APP_STATE.logs.findIndex(l => l.id === editId);
@@ -2375,8 +2405,6 @@
         showToast("Production record updated successfully.");
       } else {
         APP_STATE.logs.unshift(logObj);
-        // Increment sequence in batch settings
-        APP_STATE.batchConfig.seq = (APP_STATE.batchConfig.seq || 1) + 1;
         showToast("New production run logged successfully.");
       }
 
@@ -2387,10 +2415,11 @@
 
     function resetProdForm() {
       document.getElementById('prod-entry-form').reset();
+      const mpBox = document.getElementById('production-additional-manpower');
+      if (mpBox) mpBox.innerHTML = '';
       document.getElementById('entry-editing-id').value = '';
       document.getElementById('form-card-title').innerText = 'Log New Production Run (SOP Standard)';
       document.getElementById('prod-date').value = getTodayStr();
-      genBatchForForm();
     }
 
     function editProductionLog(id) {
@@ -2412,6 +2441,7 @@
       document.getElementById('prod-line').value = log.line;
       document.getElementById('prod-stage').value = log.stage;
       document.getElementById('prod-name').value = log.product;
+      document.getElementById('prod-product-id').value = log.productId || '';
       document.getElementById('prod-sku').value = log.sku;
       document.getElementById('prod-target').value = log.target;
       document.getElementById('prod-units').value = log.units;
@@ -2423,6 +2453,8 @@
       document.getElementById('prod-downtime-reason').value = log.downtimeReason;
       document.getElementById('prod-supervisor').value = log.supervisor;
       document.getElementById('prod-operator').value = log.operator;
+      const mpBox = document.getElementById('production-additional-manpower');
+      if (mpBox) { mpBox.innerHTML = ''; (log.additionalManpower || []).forEach(addProductionManpowerRow); }
       document.getElementById('prod-qc-status').value = log.qcStatus;
       document.getElementById('prod-status').value = log.status;
       document.getElementById('prod-remarks').value = log.remarks;
@@ -2512,13 +2544,12 @@
     function handleSaveBatchConfig(e) {
       e.preventDefault();
       if (!isHostMode) { showToast("Host Access Required", "danger"); return; }
-      APP_STATE.batchConfig.prefix = document.getElementById('cfg-prefix').value.trim();
+      APP_STATE.batchConfig.prefix = (document.getElementById('cfg-prefix')?.value || '').trim();
       APP_STATE.batchConfig.dateFormat = document.getElementById('cfg-date-format').value;
       APP_STATE.batchConfig.seq = Number(document.getElementById('cfg-seq').value);
       APP_STATE.batchConfig.digits = document.getElementById('cfg-digits').value;
       saveState();
-      genBatch();
-      showToast("Batch Generator SOP Configuration saved.");
+      showToast("Manual SOP Batch Entry Configuration saved.");
     }
 
     // Supervisors Management
@@ -2560,7 +2591,7 @@
     function openSupervisorModal(id = null) {
       if (!isHostMode) { showToast("Host Authorization Required", "danger"); return; }
       const lineSel = document.getElementById('sup-line');
-      lineSel.innerHTML = APP_STATE.lines.map(l => `<option value="${l.name}">${l.name}</option>`).join('');
+      lineSel.innerHTML = APP_STATE.lines.filter(l => l.status !== 'Inactive' && l.status !== 'Archived').map(l => `<option value="${escapeHtml(l.name)}">${escapeHtml(l.name)}</option>`).join('');
 
       if (id) {
         const s = APP_STATE.supervisors.find(x => x.id === id);
@@ -2593,10 +2624,11 @@
 
     function handleSaveSupervisor(e) {
       e.preventDefault();
+      if (!isHostMode) { showToast('Host Authorization Required', 'danger'); return; }
       const id = document.getElementById('sup-id').value;
       const obj = {
         id: id || 'S-' + Date.now(),
-        name: document.getElementById('sup-name').value.trim(),
+        name: (document.getElementById('sup-name')?.value || '').trim(),
         line: document.getElementById('sup-line').value,
         shift: document.getElementById('sup-shift').value,
         status: document.getElementById('sup-status').value
@@ -2654,7 +2686,7 @@
     function openOperatorModal(id = null) {
       if (!isHostMode) { showToast("Host Authorization Required", "danger"); return; }
       const lineSel = document.getElementById('op-line');
-      lineSel.innerHTML = APP_STATE.lines.map(l => `<option value="${l.name}">${l.name}</option>`).join('');
+      lineSel.innerHTML = APP_STATE.lines.filter(l => l.status !== 'Inactive' && l.status !== 'Archived').map(l => `<option value="${escapeHtml(l.name)}">${escapeHtml(l.name)}</option>`).join('');
 
       if (id) {
         const o = APP_STATE.operators.find(x => x.id === id);
@@ -2688,11 +2720,12 @@
 
     function handleSaveOperator(e) {
       e.preventDefault();
+      if (!isHostMode) { showToast('Host Authorization Required', 'danger'); return; }
       const id = document.getElementById('op-id').value;
       const obj = {
         id: id || 'O-' + Date.now(),
-        name: document.getElementById('op-name').value.trim(),
-        role: document.getElementById('op-role').value.trim(),
+        name: (document.getElementById('op-name')?.value || '').trim(),
+        role: (document.getElementById('op-role')?.value || '').trim(),
         line: document.getElementById('op-line').value,
         shift: document.getElementById('op-shift').value,
         status: document.getElementById('op-status').value
@@ -2807,9 +2840,9 @@
       const id = document.getElementById('p-id').value;
       const obj = {
         id: id || 'P-' + Date.now(),
-        name: document.getElementById('p-name').value.trim(),
-        sku: document.getElementById('p-sku').value.trim(),
-        category: document.getElementById('p-category').value.trim(),
+        name: (document.getElementById('p-name')?.value || '').trim(),
+        sku: (document.getElementById('p-sku')?.value || '').trim(),
+        category: (document.getElementById('p-category')?.value || '').trim(),
         speed: Number(document.getElementById('p-speed').value || 500)
       };
 
@@ -2840,9 +2873,10 @@
         tbody.innerHTML += `
           <tr>
             <td class="font-medium">${l.name}</td>
-            <td><span class="badge badge-suc">${l.status}</span></td>
+            <td class="font-mono text-xs">${l.code || '—'}</td>
+            <td><span class="badge ${l.status === 'Active' ? 'badge-suc' : 'badge-gray'}">${l.status}</span></td>
             <td class="text-right">
-              <button class="btn btn-sm btn-danger" onclick="deleteLine('${l.id}')"><i class="ti ti-trash"></i></button>
+              <button class="btn btn-sm ${l.status === 'Active' ? 'btn-danger' : ''}" onclick="deleteLine('${l.id}')"><i class="ti ti-${l.status === 'Active' ? 'trash' : 'restore'}"></i> ${l.status === 'Active' ? 'Delete' : 'Reactivate'}</button>
             </td>
           </tr>
         `;
@@ -2851,10 +2885,13 @@
 
     function handleSaveLine(e) {
       e.preventDefault();
-      const name = document.getElementById('new-line-name').value.trim();
-      if (!name) return;
+      if (!isHostMode) { showToast('Host Authorization Required', 'danger'); return; }
+      const name = (document.getElementById('new-line-name')?.value || '').trim();
+      const code = (document.getElementById('new-line-code')?.value || '').trim().toUpperCase();
+      if (!name || !code) return;
+      if (APP_STATE.lines.some(l => String(l.code || '').toUpperCase() === code || String(l.name || '').toLowerCase() === name.toLowerCase())) { showToast('Line name or code already exists.', 'danger'); return; }
 
-      const code = 'L' + (APP_STATE.lines.length + 1);
+      
       APP_STATE.lines.push({
         id: 'LINE-' + Date.now(),
         name: name,
@@ -2865,18 +2902,34 @@
 
       saveState();
       document.getElementById('new-line-name').value = '';
+      document.getElementById('new-line-code').value = '';
       renderLinesManageTable();
+      renderFormSelects();
       renderDashboard();
-      showToast("Line added.");
+      showToast("Line added successfully.");
     }
 
     function deleteLine(id) {
-      if (confirm("Remove line?")) {
+      if (!isHostMode) { showToast('Host Authorization Required', 'danger'); return; }
+      const line = APP_STATE.lines.find(l => l.id === id);
+      if (!line) { showToast('Line not found.', 'danger'); return; }
+      if (line.status !== 'Active') {
+        line.status = 'Active';
+        saveState(); renderLinesManageTable(); renderFormSelects(); renderDashboard();
+        showToast('Line reactivated successfully.');
+        return;
+      }
+      const referenced = (APP_STATE.logs || []).some(x => x.line === line.name) || (APP_STATE.manpowerLogs || []).some(x => x.line === line.name);
+      if (referenced) {
+        line.status = 'Inactive';
+        saveState(); renderLinesManageTable(); renderFormSelects(); renderDashboard();
+        showToast('Line is used in historical records, so it was deactivated instead of hard-deleted.');
+        return;
+      }
+      if (confirm(`Delete production line "${line.name}"?`)) {
         APP_STATE.lines = APP_STATE.lines.filter(l => l.id !== id);
-        saveState();
-        renderLinesManageTable();
-        renderDashboard();
-        showToast("Line removed.");
+        saveState(); renderLinesManageTable(); renderFormSelects(); renderDashboard();
+        showToast('Line deleted successfully.');
       }
     }
 
@@ -2896,10 +2949,10 @@
       e.preventDefault();
       if (!isHostMode) { showToast("Host Control Required", "danger"); return; }
       APP_STATE.branding = {
-        title: document.getElementById('cfg-company-name').value.trim(),
-        subtitle: document.getElementById('cfg-company-sub').value.trim(),
-        location: document.getElementById('cfg-company-loc').value.trim(),
-        logo: document.getElementById('cfg-company-logo').value.trim().toUpperCase()
+        title: (document.getElementById('cfg-company-name')?.value || '').trim(),
+        subtitle: (document.getElementById('cfg-company-sub')?.value || '').trim(),
+        location: (document.getElementById('cfg-company-loc')?.value || '').trim(),
+        logo: (document.getElementById('cfg-company-logo')?.value || '').trim().toUpperCase()
       };
       saveState();
       applyBranding();
@@ -2911,7 +2964,7 @@
       if (!isHostMode) { showToast("Host Control Required", "danger"); return; }
       APP_STATE.taskConfig = {
         mode: document.getElementById('cfg-task-mode').value,
-        hostPin: document.getElementById('cfg-host-pin').value.trim() || '1234'
+        hostPin: (document.getElementById('cfg-host-pin')?.value || '').trim() || '1234'
       };
       saveState();
       updateHostUI();
@@ -2937,7 +2990,7 @@
     }
 
     function doSearch() {
-      const q = document.getElementById('search-input').value.trim().toLowerCase();
+      const q = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
       const container = document.getElementById('search-results');
       const hint = document.getElementById('search-hint');
       const tbody = document.getElementById('search-tbody');
@@ -3111,26 +3164,65 @@
       win.document.close();
     }
 
+    function refreshApplication() {
+      try {
+        loadState();
+        if (!APP_STATE.manpowerLogs) APP_STATE.manpowerLogs = [];
+        if (!APP_STATE.labourRates) APP_STATE.labourRates = {};
+        if (!APP_STATE.skillMatrix) APP_STATE.skillMatrix = {};
+        if (Array.isArray(APP_STATE.skillActivities) && APP_STATE.skillActivities.length) SKILL_ACTIVITIES = APP_STATE.skillActivities.slice();
+        initUI();
+        const active = document.querySelector('.page.active');
+        if (active) {
+          const id = active.id.replace('page-','');
+          nav(id, null);
+        }
+        showToast('Application refreshed successfully.');
+      } catch (err) {
+        console.error(err);
+        showToast('Refresh failed: ' + (err.message || err), 'danger');
+      }
+    }
+
     function manualSync() {
       saveState();
       renderDashboard();
       showToast("All data synchronized with local database.");
     }
 
-    function initUI() {
+    
+    function ensureERPStateCollections() {
+      if (typeof APP_STATE !== 'object' || APP_STATE === null) return;
+      const defaults = {
+        logs: [], manpowerLogs: [], operators: [], supervisors: [],
+        products: [], lines: [], skillActivities: [], labourRates: []
+      };
+      Object.keys(defaults).forEach(k => {
+        if (!Array.isArray(APP_STATE[k])) APP_STATE[k] = defaults[k];
+      });
+    }
+
+function initUI() {
+      ensureERPStateCollections();
       applyBranding();
       updateHostUI();
       renderDashboard();
       renderProducts();
       renderFormSelects();
-      genBatch();
     }
+
+    window.addEventListener('error', function(ev) {
+      console.error('Kolor Activ ERP error:', ev.error || ev.message);
+      try { showToast('Function error: ' + (ev.message || 'Please retry this action.'), 'danger'); } catch(e) {}
+    });
 
     window.onload = function() {
       loadState();
       if (!APP_STATE.manpowerLogs) APP_STATE.manpowerLogs = [];
       if (!APP_STATE.labourRates) APP_STATE.labourRates = {};
       if (!APP_STATE.skillMatrix) APP_STATE.skillMatrix = {};
+      if (!Array.isArray(APP_STATE.skillActivities) || !APP_STATE.skillActivities.length) APP_STATE.skillActivities = SKILL_ACTIVITIES.slice();
+      else SKILL_ACTIVITIES = APP_STATE.skillActivities.slice();
       initUI();
     };
 
@@ -3167,8 +3259,9 @@
       const isOp = type === 'Operator' || type === 'Supervisor' || type === 'QC Inspector';
       list.innerHTML = Array.from({ length: Math.min(count, 20) }, (_, i) => {
         if (isOp) {
-          const opts = APP_STATE.operators.map(o =>
-            `<option value="${o.name}">${o.name} (${o.role})</option>`
+          const people = type === 'Supervisor' ? (APP_STATE.supervisors || []) : (APP_STATE.operators || []);
+          const opts = people.map(o =>
+            `<option value="${escapeHtml(o.name)}">${escapeHtml(o.name)}${o.role ? ' ('+escapeHtml(o.role)+')' : ''}</option>`
           ).join('');
           return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
             <span style="font-size:11px;color:var(--ink3);width:22px;text-align:right">${i+1}.</span>
@@ -3201,8 +3294,8 @@
 
       // populate line dropdown
       const lineEl = document.getElementById('mp-line');
-      lineEl.innerHTML = APP_STATE.lines.map(l =>
-        `<option value="${l.name}" ${m && m.line === l.name ? 'selected':''}>${l.name}</option>`
+      lineEl.innerHTML = APP_STATE.lines.filter(l => l.status !== 'Inactive' && l.status !== 'Archived').map(l =>
+        `<option value="${escapeHtml(l.name)}" ${m && m.line === l.name ? 'selected':''}>${escapeHtml(l.name)}</option>`
       ).join('');
 
       // worker type
@@ -3227,6 +3320,9 @@
 
     function handleSaveManpower(e) {
       e.preventDefault();
+      if (!Array.isArray(APP_STATE.manpowerLogs)) APP_STATE.manpowerLogs = [];
+      const batchCheck = (document.getElementById('mp-batch')?.value || '').trim();
+      if (!batchCheck) { showToast('Batch Number is required for team entry.', 'danger'); return; }
       const start     = document.getElementById('mp-start').value;
       const end       = document.getElementById('mp-end').value;
       const hours     = calcHours(start, end);
@@ -3246,7 +3342,7 @@
       const entry = {
         id:          document.getElementById('mp-id').value || 'MP-' + Date.now(),
         date:        document.getElementById('mp-date').value,
-        batch:       document.getElementById('mp-batch').value.trim(),
+        batch:       (document.getElementById('mp-batch')?.value || '').trim(),
         line:        document.getElementById('mp-line').value,
         shift:       document.getElementById('mp-shift').value,
         workerType,
@@ -3328,7 +3424,7 @@
 
     function setEl(id, val) {
       const el = document.getElementById(id);
-      if (el) el.innerText = val;
+      if (el) el.textContent = val == null ? '' : String(val);
     }
 
     // --- Tab: All Entries table ---
@@ -3535,11 +3631,48 @@
       if (toEl && !toEl.value) toEl.value = getTodayStr();
     }
 
+    function getAllLabourRecords() {
+      const records = Array.isArray(APP_STATE.manpowerLogs) ? APP_STATE.manpowerLogs.map(m => ({...m})) : [];
+      (APP_STATE.logs || []).forEach(log => {
+        const batchHours = calcHours(log.startTime, log.endTime);
+        const hasNamedManpower = (name, type) => records.some(m => m.batch === log.batch && (m.workerNames || []).includes(name) && (m.workerType || '') === type);
+
+        // The mandatory Production Entry operator is also part of the labour summary.
+        if (log.operator && !hasNamedManpower(log.operator, 'Operator')) {
+          records.push({
+            id: `${log.id}-PRIMARY-OPERATOR`, date: log.date, batch: log.batch, line: log.line, shift: log.shift,
+            workerType: 'Operator', headcount: 1, workerNames: [log.operator], activity: log.stage || 'Production',
+            hours: batchHours, totalManHours: batchHours, units: Number(log.units || 0), target: Number(log.target || 0),
+            remarks: 'Production Entry Primary Operator'
+          });
+        }
+        // Supervisor is included as a labour role for complete manpower reporting.
+        if (log.supervisor && !hasNamedManpower(log.supervisor, 'Supervisor')) {
+          records.push({
+            id: `${log.id}-PRIMARY-SUPERVISOR`, date: log.date, batch: log.batch, line: log.line, shift: log.shift,
+            workerType: 'Supervisor', headcount: 1, workerNames: [log.supervisor], activity: log.stage || 'Production',
+            hours: batchHours, totalManHours: batchHours, units: Number(log.units || 0), target: Number(log.target || 0),
+            remarks: 'Production Entry Supervisor'
+          });
+        }
+
+        (log.additionalManpower || []).forEach((m, i) => {
+          records.push({
+            id: `${log.id}-ADD-${i}`, date: log.date, batch: log.batch, line: log.line, shift: log.shift,
+            workerType: m.type || 'Other', headcount: 1, workerNames: m.name ? [m.name] : [],
+            activity: log.stage || 'Production', hours: Number(m.hours || 0), totalManHours: Number(m.hours || 0),
+            units: Number(log.units || 0), target: Number(log.target || 0), remarks: 'Production Entry Additional Manpower'
+          });
+        });
+      });
+      return records;
+    }
+
     function renderLabourSummary() {
       const from = document.getElementById('ls-from')?.value || '';
       const to   = document.getElementById('ls-to')?.value   || getTodayStr();
 
-      let logs = APP_STATE.manpowerLogs;
+      let logs = getAllLabourRecords();
       if (from) logs = logs.filter(m => m.date >= from);
       if (to)   logs = logs.filter(m => m.date <= to);
 
@@ -3580,20 +3713,27 @@
           const unitsPer = m.headcount > 0 ? Math.round(m.units / m.headcount) : m.units;
           const hoursPer = m.headcount > 0 ? +(Number(m.hours || 0)).toFixed(2) : m.hours;
           names.forEach(name => {
-            if (!workerMap[name]) workerMap[name] = { type, cfg, days: new Set(), hours: 0, units: 0, target: 0 };
+            if (!workerMap[name]) workerMap[name] = { type, cfg, line: m.line || '—', days: new Set(), hours: 0, otHours: 0, units: 0, target: 0, cost: 0 };
             workerMap[name].days.add(m.date);
-            workerMap[name].hours  += hoursPer;
-            workerMap[name].units  += unitsPer;
+            workerMap[name].hours += hoursPer;
+            workerMap[name].otHours += m.shift === 'Overtime' ? hoursPer : 0;
+            workerMap[name].units += unitsPer;
             workerMap[name].target += m.target > 0 ? Math.round(m.target / m.headcount) : 0;
+            const rate = getTypeRate(type);
+            workerMap[name].cost += (m.shift === 'Overtime' ? hoursPer * Number(rate.otRate || 0) : hoursPer * (Number(rate.daily || 0) / 8));
           });
         } else {
           // Group entry — show as "[Type] Group (×N)"
           const key = `${type} Group (×${m.headcount || 1})`;
-          if (!workerMap[key]) workerMap[key] = { type, cfg, days: new Set(), hours: 0, units: 0, target: 0, isGroup: true };
+          if (!workerMap[key]) workerMap[key] = { type, cfg, line: m.line || '—', days: new Set(), hours: 0, otHours: 0, units: 0, target: 0, cost: 0, isGroup: true };
           workerMap[key].days.add(m.date);
-          workerMap[key].hours  += Number(m.totalManHours || m.hours || 0);
-          workerMap[key].units  += Number(m.units  || 0);
+          workerMap[key].hours += Number(m.totalManHours || m.hours || 0);
+          workerMap[key].otHours += m.shift === 'Overtime' ? Number(m.totalManHours || m.hours || 0) : 0;
+          workerMap[key].units += Number(m.units || 0);
           workerMap[key].target += Number(m.target || 0);
+          const rate = getTypeRate(type);
+          const hrs = Number(m.totalManHours || m.hours || 0);
+          workerMap[key].cost += m.shift === 'Overtime' ? hrs * Number(rate.otRate || 0) : hrs * (Number(rate.daily || 0) / 8);
         }
       });
 
@@ -3601,7 +3741,7 @@
       if (tbody) {
         const entries = Object.entries(workerMap);
         if (entries.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="padding:30px;color:var(--ink3)">No manpower data in selected period. Log entries in Batch Manpower first.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="10" class="text-center" style="padding:30px;color:var(--ink3)">No manpower data in selected period. Log entries in Batch Manpower first.</td></tr>`;
         } else {
           tbody.innerHTML = entries.map(([name, d]) => {
             const uph = d.hours > 0 ? (d.units / d.hours).toFixed(1) : 0;
@@ -3610,15 +3750,16 @@
               ? `<span class="badge ${eff>=90?'badge-suc':eff>=70?'badge-wrn':'badge-dan'}">${eff}%</span>`
               : '<span class="badge badge-gray">—</span>';
             return `<tr>
-              <td>
-                <span class="badge ${d.cfg.cls}">${d.cfg.icon} ${d.type}</span>
-                <div style="font-weight:600;font-size:13px;margin-top:3px">${name}</div>
-              </td>
+              <td><span class="badge ${d.cfg.cls}">${d.cfg.icon} ${d.type}</span><div style="font-weight:600;font-size:13px;margin-top:3px">${name}</div></td>
+              <td>${d.type}</td>
+              <td>${d.line || '—'}</td>
               <td>${d.days.size} days</td>
               <td>${d.hours.toFixed(1)} h</td>
+              <td>${d.otHours.toFixed(1)} h</td>
               <td>${d.units.toLocaleString()}</td>
               <td>${uph}</td>
               ${effBadge ? `<td>${effBadge}</td>` : '<td>—</td>'}
+              <td>₹${Number(d.cost || 0).toFixed(2)}</td>
             </tr>`;
           }).join('');
         }
@@ -3658,7 +3799,7 @@
         shiftTypes[type] += (m.headcount || 1);
       });
       const ctxLS = document.getElementById('labourShiftChart');
-      if (ctxLS) {
+      if (ctxLS && typeof Chart !== 'undefined') {
         if (window._labourShiftChart) window._labourShiftChart.destroy();
         const labels = Object.keys(shiftTypes);
         const vals   = Object.values(shiftTypes);
@@ -3677,7 +3818,23 @@
       }
     }
 
-    function printLabourSummary() { window.print(); }
+    function printLabourSummary() {
+      const source = document.getElementById('page-labour-summary');
+      if (!source) { showToast('Labour Summary not available.', 'danger'); return; }
+      const win = window.open('', '_blank');
+      if (!win) { showToast('Please allow pop-ups to print the Labour Summary.', 'danger'); return; }
+      win.document.write('<!doctype html><html><head><title>KOLOR ACTIV — LABOUR SUMMARY</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111}h1{font-size:20px}table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border:1px solid #bbb;padding:7px;text-align:left;font-size:12px}.cost-summary-row{display:flex;gap:12px;flex-wrap:wrap}.cost-card{border:1px solid #ccc;padding:10px;min-width:140px}</style></head><body>');
+      win.document.write('<h1>KOLOR ACTIV — LABOUR SUMMARY</h1>');
+      win.document.write('<div>Generated: ' + getTodayStr() + '</div>');
+      const kpi = document.getElementById('ls-kpi-row');
+      const table1 = document.getElementById('labour-summary-tbody');
+      const table2 = document.getElementById('labour-line-tbody');
+      if (kpi) win.document.write(kpi.parentElement.outerHTML);
+      if (table1) win.document.write('<h2>Every Labour Type & Employee Summary</h2><table><thead><tr><th>Employee / Labour</th><th>Role / Labour Type</th><th>Line</th><th>Days Worked</th><th>Total Hours</th><th>OT Hours</th><th>Units Produced</th><th>Units / Hour</th><th>Efficiency %</th><th>Labour Cost</th></tr></thead><tbody>' + table1.innerHTML + '</tbody></table>');
+      if (table2) win.document.write('<h2>Line Summary</h2><table><tbody>' + table2.innerHTML + '</tbody></table>');
+      win.document.write('<script>window.onload=function(){window.print();};<\/script></body></html>');
+      win.document.close();
+    }
 
     /* ==========================================================================
        ACTIVITY-WISE LABOUR MODULE
@@ -3769,7 +3926,7 @@
        ========================================================================== */
     const SKILL_LEVELS = ['—', '◐', '★', '✦'];
     const SKILL_CLASSES = ['skill-na', 'skill-basic', 'skill-trained', 'skill-expert'];
-    const SKILL_ACTIVITIES = [
+    let SKILL_ACTIVITIES = [
       'Bulk Mixing','Filling & Sealing','Labelling','Packaging','QC Inspection',
       'Machine Cleaning','Line Setup','Raw Material Weighing','Dispatch Prep'
     ];
@@ -3845,6 +4002,20 @@
       showToast('Skill matrix saved successfully.');
     }
 
+    function openAddSkill() {
+      if (!isHostMode) { showToast('Host Authorization Required', 'danger'); return; }
+      const name = prompt('Enter new production skill/activity name:');
+      if (name === null) return;
+      const skill = name.trim();
+      if (!skill) { showToast('Skill name is required.', 'danger'); return; }
+      if (SKILL_ACTIVITIES.some(x => x.toLowerCase() === skill.toLowerCase())) { showToast('This skill already exists.', 'danger'); return; }
+      SKILL_ACTIVITIES.push(skill);
+      APP_STATE.skillActivities = SKILL_ACTIVITIES.slice();
+      saveState();
+      renderSkillMatrix();
+      showToast('Skill added successfully.');
+    }
+
     function exportSkillMatrixCSV() {
       let csv = 'Operator,' + SKILL_ACTIVITIES.join(',') + '\n';
       APP_STATE.operators.forEach(op => {
@@ -3912,6 +4083,8 @@
 
     function handleSaveRates(e) {
       e.preventDefault();
+      if (!isHostMode) { showToast('Host Authorization Required', 'danger'); return; }
+      if (!APP_STATE.labourRates || typeof APP_STATE.labourRates !== 'object') APP_STATE.labourRates = {};
       Object.keys(DEFAULT_RATES_BY_TYPE).forEach(type => {
         const key   = type.replace(/\W/g, '_');
         const daily  = Number(document.getElementById('rate-daily-' + key)?.value || 400);
@@ -4078,6 +4251,7 @@
     function renderPerformancePage() {
       const period = document.getElementById('perf-period')?.value || 'today';
       const today = getTodayStr();
+      ensureERPStateCollections();
       let logs = APP_STATE.logs;
 
       if (period === 'today') {
@@ -4117,113 +4291,105 @@
       const topOp = Object.entries(opUnits).sort((a, b) => b[1] - a[1])[0];
       document.getElementById('perf-top-operator').innerText = topOp ? topOp[0] : '—';
 
-      // Operator performance cards — now covers ALL worker types from manpower logs
+      // ALL MANPOWER PERFORMANCE — aligned with the complete ERP manpower system.
+      // Includes every named manpower type from Batch Manpower and Production Entry.
       const perfGrid = document.getElementById('perf-operator-grid');
       if (perfGrid) {
-        const mpLogs = APP_STATE.manpowerLogs.filter(l => {
-          if (period === 'today')  return l.date === today;
-          if (period === 'week')   { const d = new Date(); d.setDate(d.getDate()-7); return l.date >= d.toISOString().split('T')[0]; }
-          const d = new Date(); return l.date >= new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
-        });
+        const allRecords = typeof getAllLabourRecords === 'function'
+          ? getAllLabourRecords()
+          : (Array.isArray(APP_STATE.manpowerLogs) ? APP_STATE.manpowerLogs.slice() : []);
 
-        // Build per-worker entries from named workers + group entries
-        const workerPerf = {};
-        mpLogs.forEach(m => {
-          const type  = m.workerType || 'Other';
-          const cfg   = WORKER_TYPE_CONFIG[type] || WORKER_TYPE_CONFIG['Other'];
-          const names = (m.workerNames || []).filter(Boolean);
+// Normalize every manpower record into workerNames where possible so that
+// employee performance cards work for all employee types.
+allRecords.forEach(function(rec){
+  if (!Array.isArray(rec.workerNames) || !rec.workerNames.length) {
+    if (rec.worker) rec.workerNames = [rec.worker];
+    else if (rec.employee) rec.workerNames = [rec.employee];
+  }
+});
 
-          const addEntry = (name, units, target, hours) => {
-            if (!workerPerf[name]) workerPerf[name] = { type, cfg, units: 0, target: 0, hours: 0, entries: 0 };
-            workerPerf[name].units   += units;
-            workerPerf[name].target  += target;
-            workerPerf[name].hours   += hours;
-            workerPerf[name].entries += 1;
-          };
+        const pd = new Date();
+        if (period === 'week') pd.setDate(pd.getDate() - 7);
+        if (period === 'month') pd.setDate(1);
+        const periodStart = period === 'today' ? today : pd.toISOString().split('T')[0];
+        const records = allRecords.filter(m => String(m.date || '') >= periodStart);
+        const people = {};
 
-          if (names.length > 0) {
-            const perPerson = Math.round((m.units  || 0) / names.length);
-            const tgtPerson = Math.round((m.target || 0) / names.length);
-            names.forEach(n => addEntry(n, perPerson, tgtPerson, Number(m.hours || 0)));
-          } else {
-            // Group entry
-            const label = `${type} Group (×${m.headcount || 1})`;
-            addEntry(label, Number(m.units || 0), Number(m.target || 0), Number(m.totalManHours || m.hours || 0));
+        function addPerson(name, type, rec) {
+          name = String(name || '').trim();
+          type = String(type || 'Other').trim() || 'Other';
+          if (!name) return;
+          const key = type.toLowerCase() + '|' + name.toLowerCase();
+
+          if (!people[key]) {
+            const op = (APP_STATE.operators || []).find(x => String(x.name || '').trim().toLowerCase() === name.toLowerCase());
+            const sup = (APP_STATE.supervisors || []).find(x => String(x.name || '').trim().toLowerCase() === name.toLowerCase());
+            people[key] = {
+              name:name, type:type,
+              line:(op && (op.line || op.assignedLine)) || (sup && (sup.line || sup.assignedLine)) || rec.line || 'All',
+              shift:(op && op.shift) || (sup && sup.shift) || rec.shift || 'Regular',
+              units:0,target:0,rejected:0,hours:0,entries:0,days:{}
+            };
           }
-        });
-
-        // Also include production log operators
-        logs.forEach(l => {
-          if (!l.operator) return;
-          if (!workerPerf[l.operator]) {
-            const opData = APP_STATE.operators.find(o => o.name === l.operator) || {};
-            workerPerf[l.operator] = { type: opData.role || 'Operator', cfg: WORKER_TYPE_CONFIG['Operator'], units: 0, target: 0, hours: 0, entries: 0 };
-          }
-          workerPerf[l.operator].units  += Number(l.units    || 0);
-          workerPerf[l.operator].target += Number(l.target   || 0);
-          workerPerf[l.operator].entries += 1;
-        });
-
-        if (Object.keys(workerPerf).length === 0) {
-          perfGrid.innerHTML = `<div class="card" style="text-align:center;padding:40px;color:var(--ink3)">
-            <div style="font-size:36px;margin-bottom:10px">👷</div>
-            No worker data for this period. Log entries in Batch Manpower to see performance cards here.</div>`;
-        } else {
-          perfGrid.innerHTML = Object.entries(workerPerf).map(([name, d]) => {
-            const cfg = d.cfg || WORKER_TYPE_CONFIG['Other'];
-            const eff = d.target > 0 ? Math.min(Math.round((d.units / d.target) * 100), 120) : 0;
-            const effColor = eff >= 90 ? '#0ca30c' : eff >= 70 ? '#eda100' : '#d03b3b';
-            const r = 40; const circ = 2 * Math.PI * r;
-            const fill = (Math.min(eff, 100) / 100) * circ;
-            const initials = name.split(' ').map(w => w[0]).filter(Boolean).join('').substring(0, 2).toUpperCase() || '??';
-            return `
-              <div class="perf-card">
-                <div class="perf-gauge">
-                  <svg viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="${r}" fill="none" stroke="#f0f0f0" stroke-width="10"/>
-                    <circle cx="50" cy="50" r="${r}" fill="none" stroke="${effColor}" stroke-width="10"
-                      stroke-dasharray="${fill} ${circ}" stroke-dashoffset="${circ * 0.25}" stroke-linecap="round"/>
-                  </svg>
-                  <div class="gauge-label">
-                    <div class="gauge-pct" style="color:${effColor}">${eff > 0 ? eff + '%' : '—'}</div>
-                    <div class="gauge-sub">Eff.</div>
-                  </div>
-                </div>
-                <div style="font-size:20px;margin-bottom:4px">${cfg.icon}</div>
-                <div class="perf-name">${name}</div>
-                <div class="perf-role"><span class="badge ${cfg.cls}">${d.type}</span></div>
-                <div class="perf-stats">
-                  <div class="perf-stat">
-                    <div class="perf-stat-val">${d.units.toLocaleString()}</div>
-                    <div class="perf-stat-label">Units</div>
-                  </div>
-                  <div class="perf-stat">
-                    <div class="perf-stat-val">${d.target > 0 ? d.target.toLocaleString() : '—'}</div>
-                    <div class="perf-stat-label">Target</div>
-                  </div>
-                  <div class="perf-stat">
-                    <div class="perf-stat-val">${d.entries}</div>
-                    <div class="perf-stat-label">Runs</div>
-                  </div>
-                </div>
-                ${eff > 0 ? `<div class="mini-eff-bar" style="margin-top:10px">
-                  <div class="mini-eff-fill" style="width:${Math.min(eff,100)}%;background:${effColor}"></div>
-                </div>` : ''}
-              </div>`;
-          }).join('');
+          const d=people[key], hc=Math.max(1,Number(rec.headcount || 1));
+          d.units += Number(rec.units || 0)/hc;
+          d.target += Number(rec.target || 0)/hc;
+          d.rejected += Number(rec.rejected || 0)/hc;
+          d.hours += Number(rec.totalManHours || rec.hours || 0)/hc;
+          d.entries++;
+          if(rec.date) d.days[rec.date]=true;
         }
+
+        records.forEach(rec => {
+          const names=Array.isArray(rec.workerNames) ? rec.workerNames.filter(Boolean) : [];
+          if(names.length) names.forEach(n => addPerson(n, rec.workerType || 'Other', rec));
+          else if(rec.worker) addPerson(rec.worker, rec.workerType || 'Other', rec);
+        });
+
+        const rows=Object.values(people).sort((a,b)=>(b.units-a.units)||a.type.localeCompare(b.type)||a.name.localeCompare(b.name));
+        perfGrid.innerHTML=rows.length ? rows.map(d=>{
+          const eff=d.target>0?Math.round(d.units/d.target*100):0;
+          const quality=d.units+d.rejected>0?Math.round(d.units/(d.units+d.rejected)*100):100;
+          const uph=d.hours>0?d.units/d.hours:0;
+          const score=d.target>0?Math.round(Math.min(eff,100)*0.65+quality*0.25+Math.min(uph*10,100)*0.10):0;
+          const c=score>=90?'#0ca30c':score>=70?'#eda100':'#d03b3b';
+          const r=40,circ=2*Math.PI*r,fill=Math.min(score,100)/100*circ;
+          const cfg=WORKER_TYPE_CONFIG[d.type]||WORKER_TYPE_CONFIG['Other']||{};
+          return `<div class="perf-card">
+            <div class="perf-gauge"><svg viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="${r}" fill="none" stroke="#f0f0f0" stroke-width="10"/>
+              <circle cx="50" cy="50" r="${r}" fill="none" stroke="${c}" stroke-width="10" stroke-dasharray="${fill} ${circ}" stroke-dashoffset="${circ*.25}" stroke-linecap="round"/>
+            </svg><div class="gauge-label"><div class="gauge-pct" style="color:${c}">${score?score+'%':'—'}</div><div class="gauge-sub">Employee Score</div></div></div>
+            <div style="font-size:20px;margin-bottom:4px">${cfg.icon||'👷'}</div>
+            <div class="perf-name">${escapeHtml(d.name)}</div>
+            <div class="perf-role"><span class="badge badge-blue">${escapeHtml(d.type)}</span></div>
+            <div style="font-size:11px;color:var(--ink3);margin:4px 0 8px">${escapeHtml(d.line)} · ${escapeHtml(d.shift)}</div>
+            <div class="perf-stats">
+              <div class="perf-stat"><div class="perf-stat-val">${Math.round(d.units).toLocaleString()}</div><div class="perf-stat-label">Actual</div></div>
+              <div class="perf-stat"><div class="perf-stat-val">${d.target>0?Math.round(d.target).toLocaleString():'—'}</div><div class="perf-stat-label">Target</div></div>
+              <div class="perf-stat"><div class="perf-stat-val">${d.entries}</div><div class="perf-stat-label">Entries</div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;font-size:11px">
+              <div>Efficiency: <b>${eff}%</b></div><div>Quality: <b>${quality}%</b></div>
+              <div>Rejected: <b>${Math.round(d.rejected).toLocaleString()}</b></div><div>Units/Hour: <b>${uph?uph.toFixed(1):'—'}</b></div>
+              <div>Days Worked: <b>${Object.keys(d.days).length}</b></div><div>Hours: <b>${d.hours.toFixed(1)}</b></div>
+            </div>
+            <div class="mini-eff-bar" style="margin-top:10px"><div class="mini-eff-fill" style="width:${Math.min(score,100)}%;background:${c}"></div></div>
+          </div>`;
+        }).join('') : '<div class="card" style="text-align:center;padding:40px;color:var(--ink3)">No employee/manpower performance records are available for the selected period.</div>';
       }
 
       // Line efficiency chart
+// Line efficiency chart
       const lineEfData = {};
       APP_STATE.lines.forEach(line => {
         const ll = logs.filter(l => l.line === line.name);
         const u = ll.reduce((a, b) => a + Number(b.units || 0), 0);
         const t = ll.reduce((a, b) => a + Number(b.target || 0), 0);
-        lineEfData[line.name.split('(')[0].trim()] = t > 0 ? Math.round((u / t) * 100) : 0;
+        lineEfData[String(line?.name || 'Unknown').split('(')[0].trim()] = t > 0 ? Math.round((u / t) * 100) : 0;
       });
       const ctxPerf = document.getElementById('perfLineChart');
-      if (ctxPerf) {
+      if (ctxPerf && typeof Chart !== 'undefined') {
         if (window._perfLineChart) window._perfLineChart.destroy();
         window._perfLineChart = new Chart(ctxPerf, {
           type: 'bar',
@@ -4243,12 +4409,12 @@
       const dtMap = {};
       logs.forEach(l => {
         if (l.downtimeReason && l.downtimeReason !== 'No Downtime' && Number(l.downtime) > 0) {
-          const key = l.downtimeReason.split('/')[0].trim();
+          const key = String(l.downtimeReason || '').split('/')[0].trim();
           dtMap[key] = (dtMap[key] || 0) + Number(l.downtime);
         }
       });
       const ctxDT = document.getElementById('downtimeChart');
-      if (ctxDT) {
+      if (ctxDT && typeof Chart !== 'undefined') {
         if (window._downtimeChart) window._downtimeChart.destroy();
         if (Object.keys(dtMap).length > 0) {
           window._downtimeChart = new Chart(ctxDT, {
@@ -4274,7 +4440,7 @@
         }
       });
       const ctxDef = document.getElementById('defectChart');
-      if (ctxDef) {
+      if (ctxDef && typeof Chart !== 'undefined') {
         if (window._defectChart) window._defectChart.destroy();
         if (Object.keys(defMap).length > 0) {
           window._defectChart = new Chart(ctxDef, {
@@ -4368,7 +4534,7 @@ function kaMsg(s,good=false){const x=document.getElementById('kaCloudMsg');if(x)
 
 async function kaSignIn(){
   try{
-    const email=document.getElementById('kaEmail').value.trim();
+    const email=(document.getElementById('kaEmail')?.value || '').trim();
     const password=document.getElementById('kaPassword').value;
     if(!email||!password) return kaMsg('Enter email and password.');
     const {error}=await kaSb.auth.signInWithPassword({email,password});
@@ -4378,7 +4544,7 @@ async function kaSignIn(){
 }
 async function kaSignUp(){
   try{
-    const email=document.getElementById('kaEmail').value.trim();
+    const email=(document.getElementById('kaEmail')?.value || '').trim();
     const password=document.getElementById('kaPassword').value;
     if(!email||password.length<6) return kaMsg('Use a valid email and a password of at least 6 characters.');
     const {data,error}=await kaSb.auth.signUp({email,password});
@@ -4495,5 +4661,6 @@ async function kaOnSession(session){
 window.addEventListener('load',()=>setTimeout(kaStart,250));
 
   </script>
+<script>(function(){function importOperatorMaster(){try{if(typeof APP_STATE==='undefined'||!Array.isArray(window.EXCEL_OPERATOR_ENTRY_DATA))return;APP_STATE.operators=window.EXCEL_OPERATOR_ENTRY_DATA.slice();if(typeof saveState==='function')saveState();if(typeof renderOperators==='function')renderOperators();}catch(e){console.error('Operator master import failed',e);}}window.addEventListener('load',function(){setTimeout(importOperatorMaster,1200);});})();</script>
 </body>
-</html>
+</html>So the file you uploaded to me earlier (index.html) IS actually your new production.html content — you just named it index.html locally.
