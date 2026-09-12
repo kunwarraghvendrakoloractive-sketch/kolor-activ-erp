@@ -3273,10 +3273,23 @@
       }
     }
 
-    function manualSync() {
-      saveState();
-      renderDashboard();
-      showToast("All data synchronized with local database.");
+    async function manualSync() {
+      try {
+        if (typeof kaLoadCloud === 'function' && typeof kaUser !== 'undefined' && kaUser) {
+          await kaLoadCloud();
+          kaRefreshActivePage();
+          showToast("Latest cloud data loaded successfully.");
+          return;
+        }
+        saveState();
+        initUI();
+        const active = document.querySelector('.page.active');
+        if (active) nav(active.id.replace('page-',''), null);
+        showToast("Local data refreshed successfully.");
+      } catch (e) {
+        console.error('Manual sync failed:', e);
+        showToast('Sync failed: ' + (e.message || e), 'danger');
+      }
     }
 
     
@@ -4661,6 +4674,34 @@ function kaGetLocalState(){
     return {APP_STATE:(typeof APP_STATE!=='undefined'?APP_STATE:null), isHostMode:(typeof isHostMode!=='undefined'?isHostMode:false)};
   }catch(e){return {}}
 }
+function kaRefreshActivePage(){
+  try{
+    const activePage=document.querySelector('.page.active');
+    const activeId=activePage ? activePage.id.replace('page-','') : '';
+    switch(activeId){
+      case 'dashboard': if(typeof renderDashboard==='function') renderDashboard(); break;
+      case 'form':
+        if(typeof renderFormSelects==='function') renderFormSelects();
+        if(typeof renderRecentEntriesTable==='function') renderRecentEntriesTable();
+        break;
+      case 'batch': if(typeof renderBatchRegister==='function') renderBatchRegister(); break;
+      case 'supervisors': if(typeof renderSupervisors==='function') renderSupervisors(); break;
+      case 'operators': if(typeof renderOperators==='function') renderOperators(); break;
+      case 'products': if(typeof renderProducts==='function') renderProducts(); break;
+      case 'kpi': if(typeof renderKpiPage==='function') renderKpiPage(); break;
+      case 'reports': break;
+      case 'search': if(typeof doSearch==='function'){ const q=document.getElementById('search-input'); if(q && q.value) doSearch(); } break;
+      case 'settings': if(typeof populateSettingsForm==='function') populateSettingsForm(); break;
+      case 'manpower': if(typeof renderManpowerPage==='function') renderManpowerPage(); break;
+      case 'labour-summary': if(typeof renderLabourSummary==='function') renderLabourSummary(); break;
+      case 'activity-labour': if(typeof renderActivityLabour==='function') renderActivityLabour(); break;
+      case 'skill-matrix': if(typeof renderSkillMatrix==='function') renderSkillMatrix(); break;
+      case 'labour-costing': if(typeof renderLabourCosting==='function') renderLabourCosting(); break;
+      case 'performance': if(typeof renderPerformancePage==='function') renderPerformancePage(); break;
+    }
+  }catch(e){ console.error('Cloud active-page refresh failed',e); }
+}
+
 function kaApplyState(payload){
   if(!payload) return;
   try{
@@ -4675,20 +4716,7 @@ function kaApplyState(payload){
         localStorage.setItem('kolor_activ_erp_v27',JSON.stringify(APP_STATE));
       }
       if(typeof initUI==='function') initUI();
-      // Re-render the page that is currently open after cloud data arrives.
-      // This is required for Activity-wise Labour, Labour Summary, Performance,
-      // Batch Manpower and other data-driven pages that are not fully rendered by initUI().
-      try{
-        const activePage=document.querySelector('.page.active');
-        const activeId=activePage ? activePage.id.replace('page-','') : '';
-        if(activeId==='activity-labour' && typeof renderActivityLabour==='function') renderActivityLabour();
-        else if(activeId==='labour-summary' && typeof renderLabourSummary==='function') renderLabourSummary();
-        else if(activeId==='labour-costing' && typeof renderLabourCosting==='function') renderLabourCosting();
-        else if(activeId==='manpower' && typeof renderManpowerPage==='function') renderManpowerPage();
-        else if(activeId==='performance' && typeof renderPerformancePage==='function') renderPerformancePage();
-        else if(activeId==='kpi' && typeof renderKpiPage==='function') renderKpiPage();
-        else if(activeId==='dashboard' && typeof renderDashboard==='function') renderDashboard();
-      }catch(refreshErr){ console.error('Cloud page refresh failed',refreshErr); }
+      kaRefreshActivePage();
     }
   }catch(e){console.error('Cloud state apply failed',e);}
 }
@@ -4707,10 +4735,15 @@ async function kaLoadCloud(){
   const {data,error}=await kaSb.from('erp_state').select('state,updated_at,updated_by').eq('app_id',KA_CLOUD_CONFIG.APP_ID).maybeSingle();
   if(error) throw error;
   if(data){
-    kaLastCloudUpdatedAt=data.updated_at;
+    kaLastCloudUpdatedAt=data.updated_at || null;
     const empty = !data.state || Object.keys(data.state).length===0;
-    if(empty) await kaWriteCloud(true);
-    else kaApplyState(data.state);
+    if(empty){
+      // Only initialize an empty cloud row from the current browser state.
+      await kaWriteCloud(true);
+    } else {
+      // Supabase is authoritative: never replace cloud state with local state here.
+      kaApplyState(data.state);
+    }
   }else{
     await kaWriteCloud(true);
   }
@@ -4721,10 +4754,15 @@ async function kaWriteCloud(force=false){
   try{
     const {data:cur,error:readErr}=await kaSb.from('erp_state').select('updated_at').eq('app_id',KA_CLOUD_CONFIG.APP_ID).maybeSingle();
     if(readErr) throw readErr;
-    if(!force && cur?.updated_at && kaLastCloudUpdatedAt && cur.updated_at!==kaLastCloudUpdatedAt){
-      const ok=confirm('Another user changed this ERP after your last sync. Reload the latest cloud data? Press Cancel only if you intentionally want to overwrite it.');
-      if(ok){ await kaLoadCloud(); return; }
+
+    // Supabase is authoritative. A stale browser must never overwrite newer cloud data.
+    // On first sync of an existing row, or after another user has changed it, reload cloud state.
+    if(!force && cur?.updated_at && (!kaLastCloudUpdatedAt || cur.updated_at!==kaLastCloudUpdatedAt)){
+      await kaLoadCloud();
+      kaCloudStatus('Updated from team','#7c3aed');
+      return;
     }
+
     const now=new Date().toISOString();
     const {error}=await kaSb.from('erp_state').upsert({app_id:KA_CLOUD_CONFIG.APP_ID,state:kaGetLocalState(),updated_by:kaUser.id,updated_at:now});
     if(error) throw error;
@@ -4776,6 +4814,5 @@ async function kaOnSession(session){
 window.addEventListener('load',()=>setTimeout(kaStart,250));
 
   </script>
-<script>(function(){function importOperatorMaster(){try{if(typeof APP_STATE==='undefined'||!Array.isArray(window.EXCEL_OPERATOR_ENTRY_DATA))return;APP_STATE.operators=window.EXCEL_OPERATOR_ENTRY_DATA.slice();if(typeof saveState==='function')saveState();if(typeof renderOperators==='function')renderOperators();}catch(e){console.error('Operator master import failed',e);}}window.addEventListener('load',function(){setTimeout(importOperatorMaster,1200);});})();</script>
 </body>
 </html>
