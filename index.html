@@ -111,6 +111,11 @@
     label { font-size: 12px; font-weight: 600; color: var(--ink2); }
     input, select, textarea { padding: 8px 11px; border: 0.5px solid var(--bdr2); border-radius: var(--rad); font-size: 13px; color: var(--ink); background: var(--surf2); outline: none; width: 100%; transition: border-color .15s, box-shadow .15s; }
     input:focus, select:focus, textarea:focus { border-color: var(--acc); box-shadow: 0 0 0 2px rgba(42,120,214,.15); }
+    .select-search-wrap { display:flex; flex-direction:column; gap:5px; width:100%; }
+    .select-search-input { padding:6px 10px; border:0.5px solid var(--bdr2); border-radius:6px; font-size:12px; color:var(--ink2); background:var(--surf1); outline:none; width:100%; }
+    .select-search-input:focus { border-color:var(--acc); box-shadow:0 0 0 2px rgba(42,120,214,.12); background:var(--surf2); }
+    .select-search-input::placeholder { color:var(--ink3); }
+
     textarea { resize: vertical; min-height: 80px; }
     
     .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
@@ -428,6 +433,11 @@
                 </div>
               </div>
 
+              <!-- Manual Entry Notice -->
+              <div class="sop-box text-xs text-gray-600 flex flex-wrap justify-between gap-2 items-center">
+                <div><strong>Manual Entry Mode:</strong> Enter production, operator and batch manpower details manually. Search is available for selectable lists. No automatic batch/code, SKU, date or time filling.</div>
+              </div>
+
               <!-- SOP Standard Notice Bar -->
               <div class="sop-box text-xs text-gray-600 flex flex-wrap justify-between gap-2 items-center">
                 <div>
@@ -485,7 +495,7 @@
 
                   <div class="form-group">
                     <label>Product Name * <span class="text-xs text-gray-400">(Search)</span></label>
-                    <input id="prod-name" list="production-product-options" placeholder="Search Product Name / Shade / Category" autocomplete="off" oninput="autoFillSku()" required>
+                    <input id="prod-name" list="production-product-options" placeholder="Search Product Name / Shade / Category" autocomplete="off" required>
                     <datalist id="production-product-options"></datalist>
                     <input type="hidden" id="prod-product-id">
                   </div>
@@ -508,7 +518,7 @@
 
                   <div class="form-group">
                     <label>Units Rejected</label>
-                    <input type="number" id="prod-rejected" min="0" value="0">
+                    <input type="number" id="prod-rejected" min="0" placeholder="0">
                   </div>
 
                   <div class="form-group">
@@ -528,17 +538,17 @@
                   <!-- Operational Timing & Downtime -->
                   <div class="form-group">
                     <label>Batch Start Time</label>
-                    <input type="time" id="prod-start-time" value="08:00">
+                    <input type="time" id="prod-start-time">
                   </div>
 
                   <div class="form-group">
                     <label>Batch End Time</label>
-                    <input type="time" id="prod-end-time" value="16:00">
+                    <input type="time" id="prod-end-time">
                   </div>
 
                   <div class="form-group">
                     <label>Line Downtime (Minutes)</label>
-                    <input type="number" id="prod-downtime" min="0" value="0" placeholder="0">
+                    <input type="number" id="prod-downtime" min="0" placeholder="0">
                   </div>
 
                   <div class="form-group">
@@ -1702,12 +1712,47 @@
         { id: 'S3', name: 'Priya Verma', line: 'Other Assembly Line', shift: 'All', status: 'On Shift' }
       ],
       operators: [
-        { id: 'O1', name: 'Amit Singh', role: 'Filling Operator', line: 'Lipcolour Filling Line 1', shift: 'Morning', status: 'Active' },
-        { id: 'O2', name: 'Vikram Patel', role: 'Mixing Technician', line: 'Other Filling Line', shift: 'Morning', status: 'Active' },
-        { id: 'O3', name: 'Sanjay Yadav', role: 'Packaging Specialist', line: 'Other Assembly Line', shift: 'Afternoon', status: 'Active' },
-        { id: 'O4', name: 'Deepak Sharma', role: 'QC Inspector', line: 'Lipcolour Filling Line 1', shift: 'Morning', status: 'Active' }
+        { id: 'excel-op-1', name: 'Rukhsar', role: 'Filling Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-2', name: 'Kehkasa', role: 'Filling Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-3', name: 'Mantasha', role: 'Filling Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-4', name: 'Monu Khan', role: 'Filling Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-5', name: 'Abdul Kalam', role: 'Filling Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-6', name: 'Sahishta', role: 'Filling Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-7', name: 'Kehkasha', role: 'Filling Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-8', name: 'Sayama', role: 'Packing Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-9', name: 'Shaveen', role: 'Packing Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-10', name: 'Fiza', role: 'Packing Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-11', name: 'Sharheen', role: 'Packing Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-12', name: 'Ikra', role: 'Packing Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-13', name: 'Preeti Ahirwar', role: 'Packing Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-14', name: 'Amana', role: 'Packing Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-15', name: 'Farida Begam', role: 'Packing Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-16', name: 'Hamda Begum', role: 'Packing Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-17', name: 'Ilma (Muskan)', role: 'Packing Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-18', name: 'Fiza (New)', role: 'Packing Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-19', name: 'Muskan Bi', role: 'Packing Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-20', name: 'Shahin', role: 'Labelling Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-21', name: 'Sweta Kumari', role: 'Labelling Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-22', name: 'Khusbu Raikwar', role: 'Labelling Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-23', name: 'Sana (New)', role: 'Assembly Line Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-24', name: 'Dharmendar Ahirwar', role: 'Assembly Line Operator', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-25', name: 'Ramesh', role: 'Helper', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-26', name: 'Sanju Devi', role: 'Helper', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-27', name: 'Nisrat Bi', role: 'Helper', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-28', name: 'Shama Bee', role: 'Helper', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-29', name: 'Reshma', role: 'Helper', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-30', name: 'Rubi Khan', role: 'Helper', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-31', name: 'Sohil Khan', role: 'Helper', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-32', name: 'Jaya', role: 'Helper', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-33', name: 'Shabnam Husain', role: 'Helper', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-34', name: 'Sohan Kumar', role: 'Helper', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-35', name: 'Shiba', role: 'Helper', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-36', name: 'Shna', role: 'Helper', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-37', name: 'Sangita Devi', role: 'Helper', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-38', name: 'Baby', role: 'Helper', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-39', name: 'Shaahida', role: 'Helper', line: 'All', shift: 'Regular', status: 'Active' },
+        { id: 'excel-op-40', name: 'Triveni', role: 'Helper', line: 'All', shift: 'Regular', status: 'Active' }
       ],
-      logs: [],
       manpowerLogs: [],
       labourRates: {},
       skillMatrix: {}
@@ -1784,6 +1829,23 @@
 
     const MASTER_DATA_VERSION = '2026-08-11-lines-catalog-shift-v1';
 
+    function normalizeERPStateCollections(state) {
+      if (!state || typeof state !== 'object') state = {};
+      state.branding = state.branding || JSON.parse(JSON.stringify(DEFAULT_DATA.branding));
+      state.taskConfig = state.taskConfig || JSON.parse(JSON.stringify(DEFAULT_DATA.taskConfig));
+      state.batchConfig = state.batchConfig || JSON.parse(JSON.stringify(DEFAULT_DATA.batchConfig));
+      state.lines = Array.isArray(state.lines) && state.lines.length ? state.lines : JSON.parse(JSON.stringify(DEFAULT_DATA.lines));
+      state.products = Array.isArray(state.products) && state.products.length ? state.products : JSON.parse(JSON.stringify(DEFAULT_DATA.products));
+      state.supervisors = Array.isArray(state.supervisors) && state.supervisors.length ? state.supervisors : JSON.parse(JSON.stringify(DEFAULT_DATA.supervisors));
+      state.operators = Array.isArray(state.operators) && state.operators.length ? state.operators : JSON.parse(JSON.stringify(DEFAULT_DATA.operators));
+      state.logs = Array.isArray(state.logs) ? state.logs : [];
+      state.manpowerLogs = Array.isArray(state.manpowerLogs) ? state.manpowerLogs : [];
+      state.labourRates = state.labourRates || {};
+      state.skillMatrix = state.skillMatrix || {};
+      state.skillActivities = Array.isArray(state.skillActivities) ? state.skillActivities : SKILL_ACTIVITIES.slice();
+      return state;
+    }
+
     function loadState() {
       try {
         const previousKey = 'kolor_activ_erp_v25';
@@ -1795,33 +1857,11 @@
           APP_STATE = {};
         }
 
-        // Always guarantee the master collections exist.
-        // The requested production lines and product catalog are authoritative.
-        APP_STATE.branding = APP_STATE.branding || JSON.parse(JSON.stringify(DEFAULT_DATA.branding));
-        APP_STATE.taskConfig = APP_STATE.taskConfig || JSON.parse(JSON.stringify(DEFAULT_DATA.taskConfig));
-        APP_STATE.batchConfig = APP_STATE.batchConfig || JSON.parse(JSON.stringify(DEFAULT_DATA.batchConfig));
-
-        if (!Array.isArray(APP_STATE.lines) || APP_STATE.lines.length < DEFAULT_DATA.lines.length) {
-          APP_STATE.lines = JSON.parse(JSON.stringify(DEFAULT_DATA.lines));
-        } else {
-          // Ensure all 8 configured lines are present without duplicating them.
-          DEFAULT_DATA.lines.forEach(dl => {
-            if (!APP_STATE.lines.some(l => l.name === dl.name)) {
-              APP_STATE.lines.push(JSON.parse(JSON.stringify(dl)));
-            }
-          });
-        }
-
-        if (!Array.isArray(APP_STATE.products) || APP_STATE.products.length < DEFAULT_DATA.products.length) {
-          APP_STATE.products = JSON.parse(JSON.stringify(DEFAULT_DATA.products));
-        }
-
-        APP_STATE.supervisors = Array.isArray(APP_STATE.supervisors) ? APP_STATE.supervisors : JSON.parse(JSON.stringify(DEFAULT_DATA.supervisors));
-        APP_STATE.operators = Array.isArray(APP_STATE.operators) ? APP_STATE.operators : JSON.parse(JSON.stringify(DEFAULT_DATA.operators));
-        APP_STATE.logs = Array.isArray(APP_STATE.logs) ? APP_STATE.logs : [];
-        APP_STATE.manpowerLogs = Array.isArray(APP_STATE.manpowerLogs) ? APP_STATE.manpowerLogs : [];
-        APP_STATE.labourRates = APP_STATE.labourRates || {};
-        APP_STATE.skillMatrix = APP_STATE.skillMatrix || {};
+        APP_STATE = normalizeERPStateCollections(APP_STATE);
+        // Ensure all configured production lines are present without duplicating them.
+        DEFAULT_DATA.lines.forEach(dl => {
+          if (!APP_STATE.lines.some(l => l.name === dl.name)) APP_STATE.lines.push(JSON.parse(JSON.stringify(dl)));
+        });
         APP_STATE.masterDataVersion = MASTER_DATA_VERSION;
         // Normalize legacy shift values to the new company shift structure.
         const normalizeShift = (v) => {
@@ -2188,6 +2228,47 @@
       }
     }
 
+    // Search helper for native selects. The original select remains the source of truth.
+    // We rebuild only the visible option list from a cached copy, so existing change/save/edit handlers keep working.
+    function enhanceSearchableSelects(root = document) {
+      const selects = root.querySelectorAll ? root.querySelectorAll('select') : [];
+      selects.forEach(sel => {
+        if (!sel || sel.dataset.searchEnhanced === '1') return;
+        const options = Array.from(sel.options).map(o => ({ value:o.value, text:o.textContent, disabled:o.disabled }));
+        sel._allSearchOptions = options;
+        const label = sel.closest('.form-group')?.querySelector('label')?.innerText?.replace('*','').trim() || 'option';
+        const wrap = document.createElement('div');
+        wrap.className = 'select-search-wrap';
+        sel.parentNode.insertBefore(wrap, sel);
+        wrap.appendChild(sel);
+        const search = document.createElement('input');
+        search.type = 'search';
+        search.className = 'select-search-input';
+        search.placeholder = `Search ${label}...`;
+        search.autocomplete = 'off';
+        search.setAttribute('aria-label', `Search ${label}`);
+        wrap.insertBefore(search, sel);
+        const renderOptions = () => {
+          const q = search.value.trim().toLowerCase();
+          const current = sel.value;
+          const matches = sel._allSearchOptions.filter(o => !q || o.text.toLowerCase().includes(q) || o.value.toLowerCase().includes(q));
+          sel.innerHTML = '';
+          matches.forEach(o => {
+            const opt = document.createElement('option');
+            opt.value = o.value; opt.textContent = o.text; opt.disabled = o.disabled;
+            sel.appendChild(opt);
+          });
+          if (matches.some(o => o.value === current)) sel.value = current;
+          else if (matches.length && !matches.some(o => o.value === sel.value)) sel.selectedIndex = 0;
+          search.title = matches.length ? `${matches.length} matching option${matches.length === 1 ? '' : 's'}` : 'No matching options';
+        };
+        search.addEventListener('input', renderOptions);
+        search.addEventListener('focus', renderOptions);
+        sel.addEventListener('change', () => { search.value = ''; renderOptions(); });
+        sel.dataset.searchEnhanced = '1';
+      });
+    }
+
     function renderFormSelects() {
       const lines = Array.isArray(APP_STATE.lines) && APP_STATE.lines.length
         ? APP_STATE.lines
@@ -2241,27 +2322,13 @@
         ).join('');
       }
 
-      const dateEl = document.getElementById('prod-date');
-      if (dateEl && !dateEl.value) dateEl.value = getTodayStr();
-
-      autoFillSku();
+      enhanceSearchableSelects(document);
     }
 
     function escapeHtml(value) {
       return String(value ?? '').replace(/[&<>"']/g, ch => ({
         '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
       }[ch]));
-    }
-
-    function autoFillSku() {
-      const input = document.getElementById('prod-name');
-      const skuEl = document.getElementById('prod-sku');
-      const idEl = document.getElementById('prod-product-id');
-      if (!input || !skuEl) return;
-      const raw = (input?.value || '').trim();
-      const prod = (APP_STATE.products || []).find(p => p.name === raw || `${p.name} — ${p.sku || ''}`.trim() === raw);
-      skuEl.value = prod ? (prod.sku || '') : '';
-      if (idEl) idEl.value = prod ? prod.id : '';
     }
 
     function getAllManpowerNameOptions() {
@@ -2419,7 +2486,6 @@
       if (mpBox) mpBox.innerHTML = '';
       document.getElementById('entry-editing-id').value = '';
       document.getElementById('form-card-title').innerText = 'Log New Production Run (SOP Standard)';
-      document.getElementById('prod-date').value = getTodayStr();
     }
 
     function editProductionLog(id) {
@@ -2650,32 +2716,55 @@
     function renderOperators() {
       const grid = document.getElementById('operators-grid');
       const tbody = document.getElementById('operators-tbody');
+      if (!grid || !tbody) return;
+
+      let operators = Array.isArray(APP_STATE?.operators) ? APP_STATE.operators : [];
+      if (!operators.length && Array.isArray(DEFAULT_DATA?.operators)) {
+        operators = JSON.parse(JSON.stringify(DEFAULT_DATA.operators));
+        APP_STATE.operators = operators;
+      }
+
       grid.innerHTML = '';
       tbody.innerHTML = '';
 
-      APP_STATE.operators.forEach(o => {
+      if (!operators.length) {
+        const empty = '<div style="padding:30px;text-align:center;color:var(--ink3)">No operator records available.</div>';
+        grid.innerHTML = empty;
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:30px">No operator records available.</td></tr>';
+        updateHostUI();
+        return;
+      }
+
+      operators.forEach((o, idx) => {
+        const id = String(o?.id ?? `OP-${idx + 1}`);
+        const name = String(o?.name ?? '').trim() || `Operator ${idx + 1}`;
+        const role = String(o?.role ?? 'Operator');
+        const line = String(o?.line ?? 'All');
+        const shift = String(o?.shift ?? 'Regular');
+        const status = String(o?.status ?? 'Active');
+        const initials = name.slice(0, 2).toUpperCase();
         grid.innerHTML += `
           <div class="operator-card">
-            <div class="avatar">${o.name.substring(0, 2).toUpperCase()}</div>
+            <div class="avatar">${escapeHtml(initials)}</div>
             <div class="op-info">
-              <div class="op-name">${o.name}</div>
-              <div class="op-role">${o.role} · ${o.line}</div>
-              <div class="text-xs text-gray-400 mt-1"><i class="ti ti-clock"></i> Shift: ${o.shift}</div>
+              <div class="op-name">${escapeHtml(name)}</div>
+              <div class="op-role">${escapeHtml(role)} · ${escapeHtml(line)}</div>
+              <div class="text-xs text-gray-400 mt-1"><i class="ti ti-clock"></i> Shift: ${escapeHtml(shift)}</div>
             </div>
-            <span class="badge ${o.status === 'Active' ? 'badge-suc' : 'badge-gray'} absolute top-3 right-3">${o.status}</span>
+            <span class="badge ${status === 'Active' ? 'badge-suc' : 'badge-gray'} absolute top-3 right-3">${escapeHtml(status)}</span>
           </div>
         `;
 
         tbody.innerHTML += `
           <tr>
-            <td class="font-semibold">${o.name}</td>
-            <td class="text-xs">${o.role}</td>
-            <td class="text-xs">${o.line}</td>
-            <td class="text-xs">${o.shift}</td>
-            <td><span class="badge ${o.status === 'Active' ? 'badge-suc' : 'badge-gray'}">${o.status}</span></td>
+            <td class="font-semibold">${escapeHtml(name)}</td>
+            <td class="text-xs">${escapeHtml(role)}</td>
+            <td class="text-xs">${escapeHtml(line)}</td>
+            <td class="text-xs">${escapeHtml(shift)}</td>
+            <td><span class="badge ${status === 'Active' ? 'badge-suc' : 'badge-gray'}">${escapeHtml(status)}</span></td>
             <td class="text-right host-only">
-              <button class="btn btn-sm" onclick="editOperator('${o.id}')"><i class="ti ti-edit"></i></button>
-              <button class="btn btn-sm btn-danger" onclick="deleteOperator('${o.id}')"><i class="ti ti-trash"></i></button>
+              <button class="btn btn-sm" onclick="editOperator('${escapeHtml(id)}')"><i class="ti ti-edit"></i></button>
+              <button class="btn btn-sm btn-danger" onclick="deleteOperator('${escapeHtml(id)}')"><i class="ti ti-trash"></i></button>
             </td>
           </tr>
         `;
@@ -3184,10 +3273,23 @@
       }
     }
 
-    function manualSync() {
-      saveState();
-      renderDashboard();
-      showToast("All data synchronized with local database.");
+    async function manualSync() {
+      try {
+        if (typeof kaLoadCloud === 'function' && typeof kaUser !== 'undefined' && kaUser) {
+          await kaLoadCloud();
+          kaRefreshActivePage();
+          showToast("Latest cloud data loaded successfully.");
+          return;
+        }
+        saveState();
+        initUI();
+        const active = document.querySelector('.page.active');
+        if (active) nav(active.id.replace('page-',''), null);
+        showToast("Local data refreshed successfully.");
+      } catch (e) {
+        console.error('Manual sync failed:', e);
+        showToast('Sync failed: ' + (e.message || e), 'danger');
+      }
     }
 
     
@@ -3203,16 +3305,23 @@
     }
 
 function initUI() {
+      APP_STATE = normalizeERPStateCollections(APP_STATE);
       ensureERPStateCollections();
       applyBranding();
       updateHostUI();
       renderDashboard();
       renderProducts();
+      renderOperators();
+      renderSupervisors();
       renderFormSelects();
+      // A second render handles cloud/local state hydration that can finish after DOM setup.
+      setTimeout(() => {
+        try { renderOperators(); renderSupervisors(); renderProducts(); } catch (e) { console.error('Master re-render failed', e); }
+      }, 300);
     }
 
     window.addEventListener('error', function(ev) {
-      console.error('Kolor Activ ERP error:', ev.error || ev.message);
+      console.error('Kolor Activ ERP error:', ev.error || ev.message, ev.filename, ev.lineno, ev.colno);
       try { showToast('Function error: ' + (ev.message || 'Please retry this action.'), 'danger'); } catch(e) {}
     });
 
@@ -3840,15 +3949,17 @@ function initUI() {
        ACTIVITY-WISE LABOUR MODULE
        ========================================================================== */
     function renderActivityLabour() {
-      const logs = APP_STATE.manpowerLogs;
+      // Defensive guards: cloud/legacy data may contain missing collections or fields.
+      const logs = Array.isArray(APP_STATE?.manpowerLogs) ? APP_STATE.manpowerLogs.filter(Boolean) : [];
       const actMap = {};
       logs.forEach(m => {
-        if (!actMap[m.activity]) actMap[m.activity] = { hours: 0, units: 0, operators: new Set(), lines: new Set(), entries: [] };
-        actMap[m.activity].hours += Number(m.hours || 0);
-        actMap[m.activity].units += Number(m.units || 0);
-        actMap[m.activity].operators.add(m.operator);
-        actMap[m.activity].lines.add(m.line);
-        actMap[m.activity].entries.push(m);
+        const activity = String(m?.activity || 'Unspecified Activity');
+        if (!actMap[activity]) actMap[activity] = { hours: 0, units: 0, operators: new Set(), lines: new Set(), entries: [] };
+        actMap[activity].hours += Number(m?.hours || 0);
+        actMap[activity].units += Number(m?.units || 0);
+        if (m?.operator) actMap[activity].operators.add(String(m.operator));
+        if (m?.line) actMap[activity].lines.add(String(m.line));
+        actMap[activity].entries.push(m);
       });
 
       // Chart
@@ -3882,8 +3993,8 @@ function initUI() {
         return;
       }
       container.innerHTML = Object.entries(actMap).map(([act, d]) => `
-        <div class="activity-bar" id="act-bar-${act.replace(/\W/g,'_')}">
-          <div class="activity-bar-header" onclick="toggleActivityBar('act-bar-${act.replace(/\W/g,'_')}')">
+        <div class="activity-bar" id="act-bar-${String(act).replace(/\W/g,'_')}">
+          <div class="activity-bar-header" onclick="toggleActivityBar('act-bar-${String(act).replace(/\W/g,'_')}')">
             <div>
               <span class="font-semibold text-gray-900">${act}</span>
               <span class="badge badge-acc" style="margin-left:8px">${d.hours.toFixed(1)} h</span>
@@ -4103,7 +4214,7 @@ function initUI() {
 
       const today      = new Date();
       const monthStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-      const logs       = APP_STATE.manpowerLogs.filter(m => m.date >= monthStart);
+      const logs       = (Array.isArray(APP_STATE?.manpowerLogs) ? APP_STATE.manpowerLogs : []).filter(Boolean).filter(m => m.date >= monthStart);
 
       // Group by worker type
       const typeMap = {};
@@ -4227,7 +4338,7 @@ function initUI() {
       let csv = 'Worker Type,Headcount,Est. Days,Man-Hours,OT Hours,Daily Rate,OT Rate,Total Cost\n';
       const today      = new Date();
       const monthStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-      const logs       = APP_STATE.manpowerLogs.filter(m => m.date >= monthStart);
+      const logs       = (Array.isArray(APP_STATE?.manpowerLogs) ? APP_STATE.manpowerLogs : []).filter(Boolean).filter(m => m.date >= monthStart);
       const typeMap    = {};
       logs.forEach(m => {
         const type = m.workerType || 'Other';
@@ -4563,6 +4674,34 @@ function kaGetLocalState(){
     return {APP_STATE:(typeof APP_STATE!=='undefined'?APP_STATE:null), isHostMode:(typeof isHostMode!=='undefined'?isHostMode:false)};
   }catch(e){return {}}
 }
+function kaRefreshActivePage(){
+  try{
+    const activePage=document.querySelector('.page.active');
+    const activeId=activePage ? activePage.id.replace('page-','') : '';
+    switch(activeId){
+      case 'dashboard': if(typeof renderDashboard==='function') renderDashboard(); break;
+      case 'form':
+        if(typeof renderFormSelects==='function') renderFormSelects();
+        if(typeof renderRecentEntriesTable==='function') renderRecentEntriesTable();
+        break;
+      case 'batch': if(typeof renderBatchRegister==='function') renderBatchRegister(); break;
+      case 'supervisors': if(typeof renderSupervisors==='function') renderSupervisors(); break;
+      case 'operators': if(typeof renderOperators==='function') renderOperators(); break;
+      case 'products': if(typeof renderProducts==='function') renderProducts(); break;
+      case 'kpi': if(typeof renderKpiPage==='function') renderKpiPage(); break;
+      case 'reports': break;
+      case 'search': if(typeof doSearch==='function'){ const q=document.getElementById('search-input'); if(q && q.value) doSearch(); } break;
+      case 'settings': if(typeof populateSettingsForm==='function') populateSettingsForm(); break;
+      case 'manpower': if(typeof renderManpowerPage==='function') renderManpowerPage(); break;
+      case 'labour-summary': if(typeof renderLabourSummary==='function') renderLabourSummary(); break;
+      case 'activity-labour': if(typeof renderActivityLabour==='function') renderActivityLabour(); break;
+      case 'skill-matrix': if(typeof renderSkillMatrix==='function') renderSkillMatrix(); break;
+      case 'labour-costing': if(typeof renderLabourCosting==='function') renderLabourCosting(); break;
+      case 'performance': if(typeof renderPerformancePage==='function') renderPerformancePage(); break;
+    }
+  }catch(e){ console.error('Cloud active-page refresh failed',e); }
+}
+
 function kaApplyState(payload){
   if(!payload) return;
   try{
@@ -4572,8 +4711,12 @@ function kaApplyState(payload){
       if(typeof renderAll==='function') renderAll();
       if(typeof renderHost==='function') renderHost();
     }else{
-      if(payload.APP_STATE && typeof APP_STATE!=='undefined'){ APP_STATE=payload.APP_STATE; localStorage.setItem('kolor_activ_erp_v27',JSON.stringify(APP_STATE)); }
+      if(payload.APP_STATE && typeof APP_STATE!=='undefined'){
+        APP_STATE = normalizeERPStateCollections(payload.APP_STATE);
+        localStorage.setItem('kolor_activ_erp_v27',JSON.stringify(APP_STATE));
+      }
       if(typeof initUI==='function') initUI();
+      kaRefreshActivePage();
     }
   }catch(e){console.error('Cloud state apply failed',e);}
 }
@@ -4592,10 +4735,15 @@ async function kaLoadCloud(){
   const {data,error}=await kaSb.from('erp_state').select('state,updated_at,updated_by').eq('app_id',KA_CLOUD_CONFIG.APP_ID).maybeSingle();
   if(error) throw error;
   if(data){
-    kaLastCloudUpdatedAt=data.updated_at;
+    kaLastCloudUpdatedAt=data.updated_at || null;
     const empty = !data.state || Object.keys(data.state).length===0;
-    if(empty) await kaWriteCloud(true);
-    else kaApplyState(data.state);
+    if(empty){
+      // Only initialize an empty cloud row from the current browser state.
+      await kaWriteCloud(true);
+    } else {
+      // Supabase is authoritative: never replace cloud state with local state here.
+      kaApplyState(data.state);
+    }
   }else{
     await kaWriteCloud(true);
   }
@@ -4606,10 +4754,15 @@ async function kaWriteCloud(force=false){
   try{
     const {data:cur,error:readErr}=await kaSb.from('erp_state').select('updated_at').eq('app_id',KA_CLOUD_CONFIG.APP_ID).maybeSingle();
     if(readErr) throw readErr;
-    if(!force && cur?.updated_at && kaLastCloudUpdatedAt && cur.updated_at!==kaLastCloudUpdatedAt){
-      const ok=confirm('Another user changed this ERP after your last sync. Reload the latest cloud data? Press Cancel only if you intentionally want to overwrite it.');
-      if(ok){ await kaLoadCloud(); return; }
+
+    // Supabase is authoritative. A stale browser must never overwrite newer cloud data.
+    // On first sync of an existing row, or after another user has changed it, reload cloud state.
+    if(!force && cur?.updated_at && (!kaLastCloudUpdatedAt || cur.updated_at!==kaLastCloudUpdatedAt)){
+      await kaLoadCloud();
+      kaCloudStatus('Updated from team','#7c3aed');
+      return;
     }
+
     const now=new Date().toISOString();
     const {error}=await kaSb.from('erp_state').upsert({app_id:KA_CLOUD_CONFIG.APP_ID,state:kaGetLocalState(),updated_by:kaUser.id,updated_at:now});
     if(error) throw error;
@@ -4661,6 +4814,5 @@ async function kaOnSession(session){
 window.addEventListener('load',()=>setTimeout(kaStart,250));
 
   </script>
-<script>(function(){function importOperatorMaster(){try{if(typeof APP_STATE==='undefined'||!Array.isArray(window.EXCEL_OPERATOR_ENTRY_DATA))return;APP_STATE.operators=window.EXCEL_OPERATOR_ENTRY_DATA.slice();if(typeof saveState==='function')saveState();if(typeof renderOperators==='function')renderOperators();}catch(e){console.error('Operator master import failed',e);}}window.addEventListener('load',function(){setTimeout(importOperatorMaster,1200);});})();</script>
 </body>
-</html>So the file you uploaded to me earlier (index.html) IS actually your new production.html content — you just named it index.html locally.
+</html>
