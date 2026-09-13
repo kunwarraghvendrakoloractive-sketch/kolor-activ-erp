@@ -8,7 +8,7 @@
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Tabler Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/tabler-icons.min.css">
   <!-- Chart.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
@@ -2679,7 +2679,7 @@
     function editSupervisor(id) { openSupervisorModal(id); }
 
     function deleteSupervisor(id) {
-      if (!isHostMode) return;
+      if (!isHostMode) { showToast('Enable Host Mode first to delete. Click Host Mode: OFF button.', 'danger'); return; }
       if (confirm("Delete supervisor record?")) {
         APP_STATE.supervisors = APP_STATE.supervisors.filter(s => s.id !== id);
         saveState();
@@ -2798,7 +2798,7 @@
     function editOperator(id) { openOperatorModal(id); }
 
     function deleteOperator(id) {
-      if (!isHostMode) return;
+      if (!isHostMode) { showToast('Enable Host Mode first to delete. Click Host Mode: OFF button.', 'danger'); return; }
       if (confirm("Delete operator record?")) {
         APP_STATE.operators = APP_STATE.operators.filter(o => o.id !== id);
         saveState();
@@ -3390,16 +3390,17 @@ function initUI() {
 
     function openManpowerModal(id) {
       const m = id ? APP_STATE.manpowerLogs.find(x => x.id === id) : null;
-      document.getElementById('mp-modal-title').innerText = m ? 'Edit Team Entry' : 'Add Team Manpower Entry';
-      document.getElementById('mp-id').value         = m ? m.id      : '';
-      document.getElementById('mp-date').value       = m ? m.date    : getTodayStr();
-      document.getElementById('mp-batch').value      = m ? m.batch   : '';
-      document.getElementById('mp-units').value      = m ? m.units   : 0;
-      document.getElementById('mp-target').value     = m ? (m.target || 0) : 0;
-      document.getElementById('mp-start').value      = m ? m.start   : '08:00';
-      document.getElementById('mp-end').value        = m ? m.end     : '16:00';
-      document.getElementById('mp-remarks').value    = m ? m.remarks : '';
-      document.getElementById('mp-headcount').value  = m ? (m.headcount || 1) : 1;
+      const _mpTitle=document.getElementById('mp-modal-title'); if(_mpTitle) _mpTitle.innerText = m ? 'Edit Team Entry' : 'Add Team Manpower Entry';
+      const _setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
+      _setVal('mp-id',        m ? m.id      : '');
+      _setVal('mp-date',      m ? m.date    : getTodayStr());
+      _setVal('mp-batch',     m ? m.batch   : '');
+      _setVal('mp-units',     m ? m.units   : 0);
+      _setVal('mp-target',    m ? (m.target || 0) : 0);
+      _setVal('mp-start',     m ? m.start   : '08:00');
+      _setVal('mp-end',       m ? m.end     : '16:00');
+      _setVal('mp-remarks',   m ? m.remarks : '');
+      _setVal('mp-headcount', m ? (m.headcount || 1) : 1);
 
       // populate line dropdown
       const lineEl = document.getElementById('mp-line');
@@ -4777,11 +4778,12 @@ async function kaStart(){
   if(!kaReadyConfig()){
     kaMakeGate();kaGate(true);kaMsg('Open the HTML file and replace the Supabase URL and anon key first.');return;
   }
-  kaSb=window.supabase.createClient(KA_CLOUD_CONFIG.SUPABASE_URL,KA_CLOUD_CONFIG.SUPABASE_ANON_KEY);
+  kaSb=window.supabase.createClient(KA_CLOUD_CONFIG.SUPABASE_URL,KA_CLOUD_CONFIG.SUPABASE_ANON_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:false}});
   kaMakeGate();
   const {data}=await kaSb.auth.getSession();
   if(data.session){await kaOnSession(data.session);} else {kaGate(true);}
-  kaSb.auth.onAuthStateChange((_event,session)=>{ if(session) kaOnSession(session); else {kaUser=null;kaGate(true);} });
+  kaSb.auth.onAuthStateChange((_event,session)=>{ if(session){ kaOnSession(session); } else {kaUser=null;kaGate(true);} });
+  setInterval(()=>{ if(kaUser) kaSyncNow(); }, 5*60*1000);
 }
 async function kaOnSession(session){
   kaUser=session.user; kaGate(false); kaShowBar();
