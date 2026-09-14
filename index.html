@@ -2679,7 +2679,7 @@
     function editSupervisor(id) { openSupervisorModal(id); }
 
     function deleteSupervisor(id) {
-      if (!isHostMode) { showToast('Enable Host Mode first to delete. Click Host Mode: OFF button.', 'danger'); return; }
+      if (!isHostMode) { showToast("Enable Host Mode first to delete.", "danger"); return; }
       if (confirm("Delete supervisor record?")) {
         APP_STATE.supervisors = APP_STATE.supervisors.filter(s => s.id !== id);
         saveState();
@@ -2798,7 +2798,7 @@
     function editOperator(id) { openOperatorModal(id); }
 
     function deleteOperator(id) {
-      if (!isHostMode) { showToast('Enable Host Mode first to delete. Click Host Mode: OFF button.', 'danger'); return; }
+      if (!isHostMode) { showToast("Enable Host Mode first to delete.", "danger"); return; }
       if (confirm("Delete operator record?")) {
         APP_STATE.operators = APP_STATE.operators.filter(o => o.id !== id);
         saveState();
@@ -3390,17 +3390,17 @@ function initUI() {
 
     function openManpowerModal(id) {
       const m = id ? APP_STATE.manpowerLogs.find(x => x.id === id) : null;
-      const _mpTitle=document.getElementById('mp-modal-title'); if(_mpTitle) _mpTitle.innerText = m ? 'Edit Team Entry' : 'Add Team Manpower Entry';
-      const _setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val; };
-      _setVal('mp-id',        m ? m.id      : '');
-      _setVal('mp-date',      m ? m.date    : getTodayStr());
-      _setVal('mp-batch',     m ? m.batch   : '');
-      _setVal('mp-units',     m ? m.units   : 0);
-      _setVal('mp-target',    m ? (m.target || 0) : 0);
-      _setVal('mp-start',     m ? m.start   : '08:00');
-      _setVal('mp-end',       m ? m.end     : '16:00');
-      _setVal('mp-remarks',   m ? m.remarks : '');
-      _setVal('mp-headcount', m ? (m.headcount || 1) : 1);
+      document.getElementById('mp-modal-title').innerText = m ? 'Edit Team Entry' : 'Add Team Manpower Entry';
+      const _sv=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v;};
+      _sv('mp-id',        m ? m.id      : '');
+      _sv('mp-date',      m ? m.date    : getTodayStr());
+      _sv('mp-batch',     m ? m.batch   : '');
+      _sv('mp-units',     m ? m.units   : 0);
+      _sv('mp-target',    m ? (m.target || 0) : 0);
+      _sv('mp-start',     m ? m.start   : '08:00');
+      _sv('mp-end',       m ? m.end     : '16:00');
+      _sv('mp-remarks',   m ? m.remarks : '');
+      _sv('mp-headcount', m ? (m.headcount || 1) : 1);
 
       // populate line dropdown
       const lineEl = document.getElementById('mp-line');
@@ -4739,11 +4739,12 @@ async function kaLoadCloud(){
     kaLastCloudUpdatedAt=data.updated_at || null;
     const empty = !data.state || Object.keys(data.state).length===0;
     if(empty){
-      // Only initialize an empty cloud row from the current browser state.
+      // Cloud is empty - only then write local state to cloud
       await kaWriteCloud(true);
     } else {
-      // Supabase is authoritative: never replace cloud state with local state here.
+      // ALWAYS load from cloud - cloud is the single source of truth
       kaApplyState(data.state);
+      kaLastCloudUpdatedAt = data.updated_at;
     }
   }else{
     await kaWriteCloud(true);
@@ -4782,11 +4783,15 @@ async function kaStart(){
   kaMakeGate();
   const {data}=await kaSb.auth.getSession();
   if(data.session){await kaOnSession(data.session);} else {kaGate(true);}
-  kaSb.auth.onAuthStateChange((_event,session)=>{ if(session){ kaOnSession(session); } else {kaUser=null;kaGate(true);} });
-  setInterval(()=>{ if(kaUser) kaSyncNow(); }, 5*60*1000);
+  kaSb.auth.onAuthStateChange((_event,session)=>{ if(session) kaOnSession(session); else {kaUser=null;kaGate(true);} });
+  // Auto-sync from cloud every 5 minutes
+  setInterval(async ()=>{ if(kaUser){ try{ await kaLoadCloud(); kaCloudStatus('Synced','#16a34a'); }catch(e){} } }, 5*60*1000);
 }
 async function kaOnSession(session){
   kaUser=session.user; kaGate(false); kaShowBar();
+  // CRITICAL: Always load from cloud first. Never allow localStorage to overwrite cloud.
+  // Clear local timestamp so kaWriteCloud never fires on first load.
+  kaLastCloudUpdatedAt = null;
   try{await kaLoadCloud();}catch(e){kaCloudStatus('Database error','#dc2626');alert('Cloud database error: '+(e.message||e));}
   if(kaRemoteChannel) kaSb.removeChannel(kaRemoteChannel);
   kaRemoteChannel=kaSb.channel('ka-'+KA_CLOUD_CONFIG.APP_ID)
