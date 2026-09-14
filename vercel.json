@@ -1,15 +1,26 @@
 {
-  "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "index.html",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
+      "source": "/force-sync.html",
+      "destination": "/force-sync.html"
+    },
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/admin-reset.html",
+      "destination": "/admin-reset.html"
+    },
+    {
+      "source": "/setup.html",
+      "destination": "/setup.html"
+    },
+    {
+      "source": "/test-sync.html",
+      "destination": "/test-sync.html"
+    },
+    {
+      "source": "/production.html",
+      "destination": "/production.html"
     }
   ]
 }
+
+
