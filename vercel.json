@@ -1,26 +1,6 @@
 {
-  "rewrites": [
-    {
-      "source": "/force-sync.html",
-      "destination": "/force-sync.html"
-    },
-    {
-      "source": "/admin-reset.html",
-      "destination": "/admin-reset.html"
-    },
-    {
-      "source": "/setup.html",
-      "destination": "/setup.html"
-    },
-    {
-      "source": "/test-sync.html",
-      "destination": "/test-sync.html"
-    },
-    {
-      "source": "/production.html",
-      "destination": "/production.html"
-    }
-  ]
+  "version": 2,
+  "buildCommand": null,
+  "outputDirectory": ".",
+  "framework": null
 }
-
-
