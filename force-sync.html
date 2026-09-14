@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kolor Activ ERP - Force Sync Tool</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f0f4f8; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+  .box { background: white; border-radius: 12px; padding: 40px; max-width: 480px; width: 90%; box-shadow: 0 4px 24px rgba(0,0,0,0.1); text-align: center; }
+  .logo { font-size: 24px; font-weight: 700; color: #1a4fa0; margin-bottom: 8px; }
+  .sub { color: #666; margin-bottom: 32px; font-size: 14px; }
+  .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 12px; }
+  .btn-red { background: #dc2626; color: white; }
+  .btn-blue { background: #2563eb; color: white; }
+  .btn-green { background: #16a34a; color: white; }
+  .btn:hover { opacity: 0.9; }
+  .status { margin-top: 20px; padding: 12px; border-radius: 8px; font-size: 14px; display: none; }
+  .status.success { background: #dcfce7; color: #16a34a; display: block; }
+  .status.error { background: #fee2e2; color: #dc2626; display: block; }
+  .status.info { background: #dbeafe; color: #2563eb; display: block; }
+  h2 { margin: 0 0 8px; font-size: 20px; color: #1e293b; }
+  .warning { background: #fef3c7; color: #92400e; padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom: 24px; }
+  hr { border: none; border-top: 1px solid #e2e8f0; margin: 20px 0; }
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="logo">KA Kolor Activ</div>
+  <div class="sub">Production ERP — Admin Sync Tool</div>
+  
+  <h2>Device Sync Reset</h2>
+  <div class="warning">⚠️ Use this page on any device that is showing wrong data. This will clear local data and reload from cloud.</div>
+
+  <button class="btn btn-red" onclick="clearAndReload()">
+    🗑️ Clear This Device & Load from Cloud
+  </button>
+  
+  <button class="btn btn-blue" onclick="justSync()">
+    🔄 Sync from Cloud (Keep Local)
+  </button>
+
+  <button class="btn btn-green" onclick="goToERP()">
+    ✅ Open Production ERP
+  </button>
+
+  <div id="status" class="status"></div>
+
+  <hr>
+  <div style="font-size:12px;color:#94a3b8;">
+    Kolor Activ Production ERP v3.0<br>
+    Bawana, Delhi
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://xwfsqqieosnfnbjggeik.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3ZnNxcWllb3NuZm5iamdnZWlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5NTg0MDAsImV4cCI6MjEwMjUzNDQwMH0.hy93c6V1dlR4NjMrt-SxHXsdjuA4rZifgNtrlZjCsFU';
+const ERP_URL = 'https://koloractivproductioncleanfixed.vercel.app';
+
+function showStatus(msg, type) {
+  const s = document.getElementById('status');
+  s.textContent = msg;
+  s.className = 'status ' + type;
+}
+
+function clearAndReload() {
+  showStatus('Clearing local data...', 'info');
+  try {
+    // Clear ALL local storage keys related to ERP
+    const keys = Object.keys(localStorage);
+    keys.forEach(k => {
+      if (k.includes('kolor') || k.includes('erp') || k.includes('supabase') || k.includes('sb-')) {
+        localStorage.removeItem(k);
+      }
+    });
+    sessionStorage.clear();
+    showStatus('✅ Local data cleared! Redirecting to ERP...', 'success');
+    setTimeout(() => { window.location.href = ERP_URL; }, 1500);
+  } catch(e) {
+    showStatus('Error: ' + e.message, 'error');
+  }
+}
+
+async function justSync() {
+  showStatus('Connecting to cloud...', 'info');
+  try {
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const { data, error } = await sb.from('erp_state')
+      .select('state, updated_at')
+      .eq('app_id', 'kolor_production')
+      .maybeSingle();
+    
+    if (error) throw error;
+    if (!data) { showStatus('No cloud data found.', 'error'); return; }
+    
+    // Write cloud state to localStorage so ERP picks it up
+    if (data.state && data.state.APP_STATE) {
+      localStorage.setItem('kolor_activ_erp_v27', JSON.stringify(data.state.APP_STATE));
+    }
+    showStatus(`✅ Synced! Cloud data from ${data.updated_at?.slice(0,10)}. Redirecting...`, 'success');
+    setTimeout(() => { window.location.href = ERP_URL; }, 2000);
+  } catch(e) {
+    showStatus('Sync error: ' + e.message, 'error');
+  }
+}
+
+function goToERP() {
+  window.location.href = ERP_URL;
+}
+</script>
+</body>
+</html>
