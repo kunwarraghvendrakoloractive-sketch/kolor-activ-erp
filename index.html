@@ -1849,7 +1849,13 @@
     function loadState() {
       try {
         const previousKey = 'kolor_activ_erp_v25';
-        const stored = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(previousKey);
+        // CRITICAL FIX: If a supabase session token exists in localStorage,
+        // do NOT load local APP_STATE. Cloud will provide authoritative state.
+        // This prevents stale/fake localStorage data from showing before cloud loads.
+        const hasSession = Object.keys(localStorage).some(k => 
+          k.includes('sb-') || k.includes('supabase') || k.includes('auth-token')
+        );
+        const stored = hasSession ? null : (localStorage.getItem(STORAGE_KEY) || localStorage.getItem(previousKey));
 
         if (stored) {
           APP_STATE = JSON.parse(stored);
@@ -1874,7 +1880,9 @@
         if (Array.isArray(APP_STATE.operators)) APP_STATE.operators.forEach(x => x.shift = normalizeShift(x.shift));
 
 
-        if (APP_STATE.logs.length === 0) {
+        // Only seed sample logs if no cloud session exists
+        const _hasSess = Object.keys(localStorage).some(k => k.includes('sb-') || k.includes('supabase'));
+        if (APP_STATE.logs.length === 0 && !_hasSess) {
           APP_STATE.logs = seedSampleLogs();
         }
 
@@ -4636,6 +4644,7 @@ function kaMakeGate(){
     <button class="ka-cloud-btn ka-primary" onclick="kaSignIn()">Sign in</button>
     <button class="ka-cloud-btn ka-secondary" onclick="kaSignUp()">Create account</button>
     <button class="ka-cloud-btn ka-secondary" onclick="kaSignOut()">Sign out</button>
+    <button class="ka-cloud-btn" style="background:#dc2626;color:#fff;margin-top:4px" onclick="kaResetDevice()">🗑️ Reset This Device (Fix Sync Issues)</button>
     <div id="kaCloudMsg"></div>
     <div class="ka-muted" style="margin-top:14px">If you are the administrator, create your account first, then add/approve team members in Supabase.</div>
   </div>`;
@@ -4724,7 +4733,7 @@ function kaApplyState(payload){
 
 function kaShowBar(){
   let b=document.getElementById('kaCloudBar');
-  if(!b){b=document.createElement('div');b.id='kaCloudBar';b.innerHTML='<span id="kaCloudDot"></span><span id="kaCloudUser"></span><button class="ka-cloud-btn ka-secondary" style="padding:5px 8px;margin:0" onclick="kaSyncNow()">Sync</button><button class="ka-cloud-btn ka-secondary" style="padding:5px 8px;margin:0" onclick="kaSignOut()">Logout</button>';document.body.appendChild(b);}
+  if(!b){b=document.createElement('div');b.id='kaCloudBar';b.innerHTML='<span id="kaCloudDot"></span><span id="kaCloudUser"></span><button class="ka-cloud-btn ka-secondary" style="padding:5px 8px;margin:0" onclick="kaSyncNow()">Sync</button><button class="ka-cloud-btn ka-secondary" style="padding:5px 8px;margin:0" onclick="kaSignOut()">Logout</button><button class="ka-cloud-btn" style="padding:5px 8px;margin:0;background:#dc2626;color:#fff" onclick="kaResetDevice()">Reset Device</button>';document.body.appendChild(b);}
   b.style.display='flex';
   document.getElementById('kaCloudUser').textContent=kaUser?.email||'Signed in';
 }
@@ -4774,6 +4783,27 @@ async function kaWriteCloud(force=false){
   finally{kaSyncBusy=false;}
 }
 async function kaSyncNow(){ try{await kaLoadCloud();kaCloudStatus('Synced','#16a34a');}catch(e){kaCloudStatus('Sync error','#dc2626');alert(e.message||String(e));} }
+
+function kaResetDevice(){
+  if(!confirm('This will clear all local data on this device and reload fresh from cloud. Continue?')) return;
+  try {
+    // Clear all ERP localStorage keys
+    Object.keys(localStorage).forEach(k => {
+      if(k.includes('kolor') || k.includes('erp') || k.includes('supabase') || k.includes('sb-') || k.includes('ka_')) {
+        localStorage.removeItem(k);
+      }
+    });
+    sessionStorage.clear();
+    // Clear all cookies for this domain
+    document.cookie.split(";").forEach(c => {
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+    alert('Device reset complete! Page will reload now.');
+    window.location.reload(true);
+  } catch(e) {
+    alert('Reset failed: ' + e.message);
+  }
+}
 
 async function kaStart(){
   if(!kaReadyConfig()){
