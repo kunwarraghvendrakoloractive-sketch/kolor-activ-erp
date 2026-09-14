@@ -1849,13 +1849,7 @@
     function loadState() {
       try {
         const previousKey = 'kolor_activ_erp_v25';
-        // CRITICAL FIX: If a supabase session token exists in localStorage,
-        // do NOT load local APP_STATE. Cloud will provide authoritative state.
-        // This prevents stale/fake localStorage data from showing before cloud loads.
-        const hasSession = Object.keys(localStorage).some(k => 
-          k.includes('sb-') || k.includes('supabase') || k.includes('auth-token')
-        );
-        const stored = hasSession ? null : (localStorage.getItem(STORAGE_KEY) || localStorage.getItem(previousKey));
+        const stored = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(previousKey);
 
         if (stored) {
           APP_STATE = JSON.parse(stored);
@@ -1880,9 +1874,7 @@
         if (Array.isArray(APP_STATE.operators)) APP_STATE.operators.forEach(x => x.shift = normalizeShift(x.shift));
 
 
-        // Only seed sample logs if no cloud session exists
-        const _hasSess = Object.keys(localStorage).some(k => k.includes('sb-') || k.includes('supabase'));
-        if (APP_STATE.logs.length === 0 && !_hasSess) {
+        if (APP_STATE.logs.length === 0) {
           APP_STATE.logs = seedSampleLogs();
         }
 
@@ -2687,7 +2679,7 @@
     function editSupervisor(id) { openSupervisorModal(id); }
 
     function deleteSupervisor(id) {
-      if (!isHostMode) { showToast("Enable Host Mode first to delete.", "danger"); return; }
+      if (!isHostMode) return;
       if (confirm("Delete supervisor record?")) {
         APP_STATE.supervisors = APP_STATE.supervisors.filter(s => s.id !== id);
         saveState();
@@ -2806,7 +2798,7 @@
     function editOperator(id) { openOperatorModal(id); }
 
     function deleteOperator(id) {
-      if (!isHostMode) { showToast("Enable Host Mode first to delete.", "danger"); return; }
+      if (!isHostMode) return;
       if (confirm("Delete operator record?")) {
         APP_STATE.operators = APP_STATE.operators.filter(o => o.id !== id);
         saveState();
@@ -3399,16 +3391,15 @@ function initUI() {
     function openManpowerModal(id) {
       const m = id ? APP_STATE.manpowerLogs.find(x => x.id === id) : null;
       document.getElementById('mp-modal-title').innerText = m ? 'Edit Team Entry' : 'Add Team Manpower Entry';
-      const _sv=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v;};
-      _sv('mp-id',        m ? m.id      : '');
-      _sv('mp-date',      m ? m.date    : getTodayStr());
-      _sv('mp-batch',     m ? m.batch   : '');
-      _sv('mp-units',     m ? m.units   : 0);
-      _sv('mp-target',    m ? (m.target || 0) : 0);
-      _sv('mp-start',     m ? m.start   : '08:00');
-      _sv('mp-end',       m ? m.end     : '16:00');
-      _sv('mp-remarks',   m ? m.remarks : '');
-      _sv('mp-headcount', m ? (m.headcount || 1) : 1);
+      document.getElementById('mp-id').value         = m ? m.id      : '';
+      document.getElementById('mp-date').value       = m ? m.date    : getTodayStr();
+      document.getElementById('mp-batch').value      = m ? m.batch   : '';
+      document.getElementById('mp-units').value      = m ? m.units   : 0;
+      document.getElementById('mp-target').value     = m ? (m.target || 0) : 0;
+      document.getElementById('mp-start').value      = m ? m.start   : '08:00';
+      document.getElementById('mp-end').value        = m ? m.end     : '16:00';
+      document.getElementById('mp-remarks').value    = m ? m.remarks : '';
+      document.getElementById('mp-headcount').value  = m ? (m.headcount || 1) : 1;
 
       // populate line dropdown
       const lineEl = document.getElementById('mp-line');
@@ -4635,21 +4626,20 @@ function kaMakeGate(){
   if(document.getElementById('kaCloudGate')) return;
   const d=document.createElement('div');
   d.id='kaCloudGate';
-  d.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;';
-  d.innerHTML=`<div style="background:#fff;border-radius:16px;padding:40px;max-width:420px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+  d.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.92);z-index:99999;display:flex;align-items:center;justify-content:center;';
+  d.innerHTML=`<div style="background:#fff;border-radius:16px;padding:40px;max-width:400px;width:90%;text-align:center;">
     <div style="font-size:11px;font-weight:800;letter-spacing:.08em;color:#1a4fa0;text-transform:uppercase;margin-bottom:8px;">KOLOR ACTIV ONLINE ERP</div>
-    <h2 style="margin:0 0 8px;font-size:22px;color:#1e293b;">Team Login</h2>
-    <p style="color:#64748b;font-size:13px;margin-bottom:20px;">Sign in to access the shared cloud database.</p>
+    <h2 style="margin:0 0 8px;color:#1e293b;">Team Login</h2>
+    <p style="color:#64748b;font-size:13px;margin-bottom:20px;">Sign in to sync with cloud database.</p>
     <input id="kaEmail" type="email" placeholder="Work email" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:10px;font-size:14px;box-sizing:border-box;">
     <input id="kaPassword" type="password" placeholder="Password" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:16px;font-size:14px;box-sizing:border-box;">
-    <button onclick="kaSignIn()" style="width:100%;padding:12px;background:#1a4fa0;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px;">Sign In</button>
-    <button onclick="kaSignUp()" style="width:100%;padding:10px;background:#f1f5f9;color:#1e293b;border:none;border-radius:8px;font-size:14px;cursor:pointer;margin-bottom:8px;">Create Account</button>
-    <button onclick="kaResetDevice()" style="width:100%;padding:10px;background:#fee2e2;color:#dc2626;border:none;border-radius:8px;font-size:13px;cursor:pointer;">🗑️ Clear Device Cache & Reload</button>
-    <div id="kaCloudMsg" style="margin-top:12px;font-size:13px;"></div>
+    <button onclick="kaSignIn()" style="width:100%;padding:13px;background:#1a4fa0;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;">Sign In</button>
+    <button onclick="kaSignUp()" style="width:100%;padding:11px;background:#f1f5f9;color:#1e293b;border:none;border-radius:8px;font-size:14px;cursor:pointer;margin-bottom:8px;">Create Account</button>
+    <div id="kaCloudMsg" style="margin-top:10px;font-size:13px;min-height:20px;"></div>
   </div>`;
   document.body.appendChild(d);
 }
-function kaGate(show=true){ const x=document.getElementById('kaCloudGate'); if(x) x.style.display=show?'flex':'none'; if(show && x) { x.style.position='fixed';x.style.top='0';x.style.left='0';x.style.width='100%';x.style.height='100%';x.style.background='rgba(0,0,0,0.85)';x.style.zIndex='99999';x.style.alignItems='center';x.style.justifyContent='center'; } }
+function kaGate(show=true){ const x=document.getElementById('kaCloudGate'); if(x) x.style.display=show?'flex':'none'; }
 function kaMsg(s,good=false){const x=document.getElementById('kaCloudMsg');if(x){x.textContent=s;x.style.color=good?'#15803d':'#b91c1c';}}
 
 async function kaSignIn(){
@@ -4732,7 +4722,7 @@ function kaApplyState(payload){
 
 function kaShowBar(){
   let b=document.getElementById('kaCloudBar');
-  if(!b){b=document.createElement('div');b.id='kaCloudBar';b.innerHTML='<span id="kaCloudDot"></span><span id="kaCloudUser"></span><button class="ka-cloud-btn ka-secondary" style="padding:5px 8px;margin:0" onclick="kaSyncNow()">Sync</button><button class="ka-cloud-btn ka-secondary" style="padding:5px 8px;margin:0" onclick="kaSignOut()">Logout</button><button class="ka-cloud-btn" style="padding:5px 8px;margin:0;background:#dc2626;color:#fff" onclick="kaResetDevice()">Reset Device</button>';document.body.appendChild(b);}
+  if(!b){b=document.createElement('div');b.id='kaCloudBar';b.innerHTML='<span id="kaCloudDot"></span><span id="kaCloudUser"></span><button class="ka-cloud-btn ka-secondary" style="padding:5px 8px;margin:0" onclick="kaSyncNow()">Sync</button><button class="ka-cloud-btn ka-secondary" style="padding:5px 8px;margin:0" onclick="kaSignOut()">Logout</button>';document.body.appendChild(b);}
   b.style.display='flex';
   document.getElementById('kaCloudUser').textContent=kaUser?.email||'Signed in';
 }
@@ -4747,12 +4737,11 @@ async function kaLoadCloud(){
     kaLastCloudUpdatedAt=data.updated_at || null;
     const empty = !data.state || Object.keys(data.state).length===0;
     if(empty){
-      // Cloud is empty - only then write local state to cloud
+      // Only initialize an empty cloud row from the current browser state.
       await kaWriteCloud(true);
     } else {
-      // ALWAYS load from cloud - cloud is the single source of truth
+      // Supabase is authoritative: never replace cloud state with local state here.
       kaApplyState(data.state);
-      kaLastCloudUpdatedAt = data.updated_at;
     }
   }else{
     await kaWriteCloud(true);
@@ -4783,27 +4772,6 @@ async function kaWriteCloud(force=false){
 }
 async function kaSyncNow(){ try{await kaLoadCloud();kaCloudStatus('Synced','#16a34a');}catch(e){kaCloudStatus('Sync error','#dc2626');alert(e.message||String(e));} }
 
-function kaResetDevice(){
-  if(!confirm('This will clear all local data on this device and reload fresh from cloud. Continue?')) return;
-  try {
-    // Clear all ERP localStorage keys
-    Object.keys(localStorage).forEach(k => {
-      if(k.includes('kolor') || k.includes('erp') || k.includes('supabase') || k.includes('sb-') || k.includes('ka_')) {
-        localStorage.removeItem(k);
-      }
-    });
-    sessionStorage.clear();
-    // Clear all cookies for this domain
-    document.cookie.split(";").forEach(c => {
-      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-    });
-    alert('Device reset complete! Page will reload now.');
-    window.location.reload(true);
-  } catch(e) {
-    alert('Reset failed: ' + e.message);
-  }
-}
-
 async function kaStart(){
   if(!kaReadyConfig()){
     kaMakeGate();kaGate(true);kaMsg('Open the HTML file and replace the Supabase URL and anon key first.');return;
@@ -4813,14 +4781,10 @@ async function kaStart(){
   const {data}=await kaSb.auth.getSession();
   if(data.session){await kaOnSession(data.session);} else {kaGate(true);}
   kaSb.auth.onAuthStateChange((_event,session)=>{ if(session) kaOnSession(session); else {kaUser=null;kaGate(true);} });
-  // Auto-sync from cloud every 5 minutes
-  setInterval(async ()=>{ if(kaUser){ try{ await kaLoadCloud(); kaCloudStatus('Synced','#16a34a'); }catch(e){} } }, 5*60*1000);
+  setInterval(async()=>{ if(kaUser){ try{await kaLoadCloud();kaCloudStatus('Synced','#16a34a');}catch(e){} } },5*60*1000);
 }
 async function kaOnSession(session){
   kaUser=session.user; kaGate(false); kaShowBar();
-  // CRITICAL: Always load from cloud first. Never allow localStorage to overwrite cloud.
-  // Clear local timestamp so kaWriteCloud never fires on first load.
-  kaLastCloudUpdatedAt = null;
   try{await kaLoadCloud();}catch(e){kaCloudStatus('Database error','#dc2626');alert('Cloud database error: '+(e.message||e));}
   if(kaRemoteChannel) kaSb.removeChannel(kaRemoteChannel);
   kaRemoteChannel=kaSb.channel('ka-'+KA_CLOUD_CONFIG.APP_ID)
