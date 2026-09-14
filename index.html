@@ -4635,22 +4635,21 @@ function kaMakeGate(){
   if(document.getElementById('kaCloudGate')) return;
   const d=document.createElement('div');
   d.id='kaCloudGate';
-  d.innerHTML=`<div class="box">
-    <div style="font-size:11px;font-weight:800;letter-spacing:.08em;color:#1a4fa0;text-transform:uppercase">KOLOR ACTIV ONLINE ERP</div>
-    <h2>Team Login</h2>
-    <div class="ka-muted">This app is connected to the shared cloud database. Each team member should use their own account.</div>
-    <input id="kaEmail" type="email" placeholder="Work email">
-    <input id="kaPassword" type="password" placeholder="Password (minimum 6 characters)">
-    <button class="ka-cloud-btn ka-primary" onclick="kaSignIn()">Sign in</button>
-    <button class="ka-cloud-btn ka-secondary" onclick="kaSignUp()">Create account</button>
-    <button class="ka-cloud-btn ka-secondary" onclick="kaSignOut()">Sign out</button>
-    <button class="ka-cloud-btn" style="background:#dc2626;color:#fff;margin-top:4px" onclick="kaResetDevice()">🗑️ Reset This Device (Fix Sync Issues)</button>
-    <div id="kaCloudMsg"></div>
-    <div class="ka-muted" style="margin-top:14px">If you are the administrator, create your account first, then add/approve team members in Supabase.</div>
+  d.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;';
+  d.innerHTML=`<div style="background:#fff;border-radius:16px;padding:40px;max-width:420px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <div style="font-size:11px;font-weight:800;letter-spacing:.08em;color:#1a4fa0;text-transform:uppercase;margin-bottom:8px;">KOLOR ACTIV ONLINE ERP</div>
+    <h2 style="margin:0 0 8px;font-size:22px;color:#1e293b;">Team Login</h2>
+    <p style="color:#64748b;font-size:13px;margin-bottom:20px;">Sign in to access the shared cloud database.</p>
+    <input id="kaEmail" type="email" placeholder="Work email" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:10px;font-size:14px;box-sizing:border-box;">
+    <input id="kaPassword" type="password" placeholder="Password" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:16px;font-size:14px;box-sizing:border-box;">
+    <button onclick="kaSignIn()" style="width:100%;padding:12px;background:#1a4fa0;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:8px;">Sign In</button>
+    <button onclick="kaSignUp()" style="width:100%;padding:10px;background:#f1f5f9;color:#1e293b;border:none;border-radius:8px;font-size:14px;cursor:pointer;margin-bottom:8px;">Create Account</button>
+    <button onclick="kaResetDevice()" style="width:100%;padding:10px;background:#fee2e2;color:#dc2626;border:none;border-radius:8px;font-size:13px;cursor:pointer;">🗑️ Clear Device Cache & Reload</button>
+    <div id="kaCloudMsg" style="margin-top:12px;font-size:13px;"></div>
   </div>`;
   document.body.appendChild(d);
 }
-function kaGate(show=true){ const x=document.getElementById('kaCloudGate'); if(x) x.style.display=show?'flex':'none'; }
+function kaGate(show=true){ const x=document.getElementById('kaCloudGate'); if(x) x.style.display=show?'flex':'none'; if(show && x) { x.style.position='fixed';x.style.top='0';x.style.left='0';x.style.width='100%';x.style.height='100%';x.style.background='rgba(0,0,0,0.85)';x.style.zIndex='99999';x.style.alignItems='center';x.style.justifyContent='center'; } }
 function kaMsg(s,good=false){const x=document.getElementById('kaCloudMsg');if(x){x.textContent=s;x.style.color=good?'#15803d':'#b91c1c';}}
 
 async function kaSignIn(){
