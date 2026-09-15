@@ -3135,7 +3135,7 @@
         csv += `"${l.id}","${l.batch}","${l.lot}","${l.date}","${l.shift}","${l.line}","${l.stage}","${l.product}","${l.sku}",${l.target},${l.units},${l.rejected},"${l.defectReason}","${l.startTime}","${l.endTime}",${l.downtime},"${l.downtimeReason}","${l.supervisor}","${l.operator}","${l.qcStatus}","${l.status}","${l.remarks}"\n`;
       });
 
-      const blob = new Blob([csv], { type: 'text/csv' });
+      const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -3162,7 +3162,7 @@
         csv += `"${l.batch}","${l.date}","${l.product}","${l.line}",${l.units},${l.target},"${l.qcStatus}","${l.operator}"\n`;
       });
 
-      const blob = new Blob([csv], { type: 'text/csv' });
+      const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -4588,7 +4588,7 @@ allRecords.forEach(function(rec){
        SHARED UTILITY: CSV DOWNLOAD
        ========================================================================== */
     function downloadCSV(csvContent, filename) {
-      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const blob = new Blob(['﻿' + csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = filename; a.click();
