@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Kolor Activ Host Control System</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#667085;--primary:#5b4cf0;--primary2:#7c3aed;--green:#16a34a;--red:#dc2626;--amber:#d97706;--blue:#2563eb;--border:#e5e7eb;--shadow:0 8px 25px #17203312}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}
+.app{display:flex;min-height:100vh}.side{width:255px;background:linear-gradient(180deg,#16132d,#111827);color:#fff;padding:20px 15px;position:fixed;height:100vh;overflow:auto;z-index:20}.brand{font-size:22px;font-weight:900}.sub{font-size:12px;color:#a7a9bb;margin:4px 0 25px}.nav button{width:100%;border:0;background:transparent;color:#cfd2df;text-align:left;padding:12px 13px;border-radius:10px;margin:3px 0;cursor:pointer;font-size:14px}.nav button:hover,.nav button.active{background:linear-gradient(90deg,#5b4cf0,#7c3aed);color:#fff;box-shadow:0 5px 15px #0003}.main{margin-left:255px;width:calc(100% - 255px);padding:25px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.top h1{margin:0;font-size:27px}.user{background:#fff;border:1px solid var(--border);padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);font-size:13px}
+.page{display:none}.page.active{display:block}.hero{background:linear-gradient(115deg,#312e81,#6d28d9);color:#fff;border-radius:20px;padding:25px;margin-bottom:20px;box-shadow:var(--shadow)}.hero h2{margin:0 0 7px}.hero p{margin:0;color:#ddd6fe}
+.cards{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:17px;box-shadow:var(--shadow)}.label{font-size:12px;color:var(--muted)}.value{font-size:27px;font-weight:850;margin-top:7px}.small{font-size:11px;color:var(--muted);margin-top:5px}.green{color:var(--green)}.red{color:var(--red)}.amber{color:var(--amber)}.blue{color:var(--blue)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:18px}.panel{background:#fff;border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:var(--shadow)}.panel h3{margin:0 0 15px;font-size:16px}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:750px}th,td{padding:11px 9px;border-bottom:1px solid var(--border);text-align:left}th{color:var(--muted);font-weight:700;background:#fafafa}.tablewrap{overflow:auto}
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:15px}.btn{border:0;border-radius:9px;padding:10px 14px;cursor:pointer;font-weight:700}.primary{background:var(--primary);color:#fff}.secondary{background:#eef2ff;color:#3730a3}.success{background:#dcfce7;color:#166534}.danger{background:#fee2e2;color:#991b1b}.dark{background:#1f2937;color:#fff}
+input,select,textarea{padding:10px;border:1px solid #d1d5db;border-radius:9px;background:#fff;width:100%;font:inherit}textarea{min-height:75px;resize:vertical}form.formgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.full{grid-column:1/-1}.field label{display:block;font-size:12px;font-weight:700;margin-bottom:5px;color:#475467}.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800}.bgreen{background:#dcfce7;color:#166534}.bred{background:#fee2e2;color:#991b1b}.bamber{background:#fef3c7;color:#92400e}.bblue{background:#dbeafe;color:#1d4ed8}
+.modal{display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;padding:20px;z-index:50}.modal.show{display:flex}.modalbox{background:#fff;border-radius:18px;width:min(1000px,100%);max-height:92vh;overflow:auto;padding:22px}.close{float:right;border:0;background:#eee;border-radius:50%;width:34px;height:34px;cursor:pointer;font-size:20px}
+.kicker{font-size:11px;font-weight:800;text-transform:uppercase;color:#7c3aed;letter-spacing:.08em}.quick{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}.quick .btn{padding:13px 8px}
+canvas{max-width:100%}.empty{text-align:center;color:var(--muted);padding:25px}.dangertext{color:var(--red);font-weight:800}
+@media(max-width:1150px){.cards{grid-template-columns:repeat(3,1fr)}.quick{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:850px){.side{width:210px}.main{margin-left:210px;width:calc(100% - 210px)}.grid2,.grid3{grid-template-columns:1fr}form.formgrid{grid-template-columns:1fr 1fr}}
+@media(max-width:650px){.side{position:static;width:100%;height:auto}.app{display:block}.main{margin:0;width:100%;padding:14px}.cards{grid-template-columns:repeat(2,1fr)}.top{align-items:flex-start;gap:10px}.top h1{font-size:20px}.quick{grid-template-columns:1fr 1fr}form.formgrid{grid-template-columns:1fr}.hero{padding:18px}}
+@media print{body{background:#fff}.side,.top,.toolbar,.no-print{display:none!important}.main{margin:0;width:100%;padding:0}.page{display:none!important}.page.printing{display:block!important}.panel,.card{box-shadow:none;border:0}.print-doc{display:block!important}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="app">
+<aside class="side">
+  <div class="brand">KOLOR ACTIV</div><div class="sub">HOST CONTROL SYSTEM</div>
+  <div class="nav">
+    <button class="active" onclick="show('dashboard',this)">▦ Dashboard</button>
+    <button onclick="show('packing',this)">▣ Packing Material</button>
+    <button onclick="show('finished',this)">▤ Finished Goods</button>
+    <button onclick="show('transactions',this)">↔ Stock Ledger</button>
+    <button onclick="show('audit',this)">✓ Physical Audit</button>
+    <button onclick="show('reports',this)">▥ Reports</button>
+    <button onclick="show('masters',this)">⚙ Masters</button>
+    <button onclick="show('hostcontrol',this)">🛡 Host Control</button>
+  </div>
+</aside>
+<main class="main">
+<div class="top"><h1 id="title">Store Dashboard</h1><div class="user">Store Manager · Admin</div></div>
+
+<section id="dashboard" class="page active">
+ <div class="hero"><div class="kicker" style="color:#c4b5fd">Kolor Activ Store Control</div><h2>Smart Store Dashboard</h2><p>Real-time control of packing materials, finished goods, batches, FEFO and stock movements.</p></div>
+ <div class="cards">
+  <div class="card"><div class="label">PM Items</div><div class="value" id="pmCount">0</div><div class="small">Material masters</div></div>
+  <div class="card"><div class="label">PM Stock</div><div class="value blue" id="pmStock">0</div><div class="small">Total units</div></div>
+  <div class="card"><div class="label">Low Stock</div><div class="value amber" id="lowCount">0</div><div class="small">Needs attention</div></div>
+  <div class="card"><div class="label">FG Products</div><div class="value" id="fgProducts">0</div><div class="small">Active products</div></div>
+  <div class="card"><div class="label">FG Stock</div><div class="value green" id="fgStock">0</div><div class="small">All batches</div></div>
+  <div class="card"><div class="label">FG Batches</div><div class="value" id="fgCount">0</div><div class="small">Batch-wise stock</div></div>
+  <div class="card"><div class="label">Today's Receipts</div><div class="value green" id="todayReceipts">0</div></div>
+  <div class="card"><div class="label">Today's Issues</div><div class="value red" id="todayIssues">0</div></div>
+  <div class="card"><div class="label">Transfers</div><div class="value blue" id="todayTransfers">0</div></div>
+  <div class="card"><div class="label">Expiry Alerts</div><div class="value amber" id="expiryAlerts">0</div><div class="small">≤ 90 days / expired</div></div>
+ </div>
+ <div class="panel" style="margin-top:18px"><h3>Quick Actions</h3><div class="quick">
+   <button class="btn primary" onclick="openModal('pmReceipt')">+ PM Receipt</button>
+   <button class="btn secondary" onclick="openModal('pmIssue')">PM Issue Pass</button>
+   <button class="btn primary" onclick="openModal('fgReceipt')">+ FG Receipt</button>
+   <button class="btn secondary" onclick="openModal('fgIssue')">FG Issue Pass</button>
+   <button class="btn secondary" onclick="openModal('transfer')">Stock Transfer</button>
+   <button class="btn success" onclick="show('reports')">Reports</button>
+ </div></div>
+ <div class="grid2">
+  <div class="panel"><h3>Recent Transactions</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>No.</th><th>Type</th><th>Item</th><th>Qty</th></tr></thead><tbody id="recent"></tbody></table></div></div>
+  <div class="panel"><h3>FEFO / Expiry Alerts</h3><div class="tablewrap"><table><thead><tr><th>Product</th><th>Shade</th><th>Batch</th><th>EXP</th><th>Status</th></tr></thead><tbody id="fefo"></tbody></table></div></div>
+ </div>
+</section>
+
+<section id="packing" class="page">
+ <div class="toolbar"><button class="btn primary" onclick="openModal('pmReceipt')">+ Material Receipt</button><button class="btn secondary" onclick="openModal('pmIssue')">+ Issue Pass</button><button class="btn secondary" onclick="openModal('pmTransfer')">Stock Transfer</button><button class="btn secondary" onclick="exportCSV('packing')">Export CSV</button></div>
+ <div class="panel"><h3>Packing Material Stock</h3><div class="toolbar"><input id="pmSearch" placeholder="Search code, material, shade..." oninput="renderAll()"><select id="pmStatus" onchange="renderAll()" style="width:auto"><option value="">All Status</option><option value="OK">OK</option><option value="LOW">LOW</option><option value="OUT">OUT OF STOCK</option></select></div>
+ <div class="tablewrap"><table><thead><tr><th>Code</th><th>Material</th><th>Shade</th><th>Shade Code</th><th>UOM</th><th>Stock</th><th>Min</th><th>Rack/Bin</th><th>Status</th><th>Action</th></tr></thead><tbody id="pmTable"></tbody></table></div></div>
+</section>
+
+<section id="finished" class="page">
+ <div class="toolbar"><button class="btn primary" onclick="openModal('fgReceipt')">+ FG Receipt</button><button class="btn secondary" onclick="openModal('fgIssue')">+ FG Issue Pass</button><button class="btn secondary" onclick="openModal('fgTransfer')">Stock Transfer</button><button class="btn secondary" onclick="exportCSV('finished')">Export CSV</button></div>
+ <div class="panel"><h3>Finished Goods — Batch-wise / FEFO</h3><div class="toolbar"><input id="fgSearch" placeholder="Search product, code, shade, batch..." oninput="renderAll()"></div>
+ <div class="tablewrap"><table><thead><tr><th>Code</th><th>Product</th><th>Shade</th><th>Batch</th><th>Qty</th><th>MFD</th><th>EXP</th><th>Rack/Bin</th><th>FEFO</th><th>Action</th></tr></thead><tbody id="fgTable"></tbody></table></div></div>
+</section>
+
+<section id="transactions" class="page">
+ <div class="toolbar"><input id="searchTx" placeholder="Search transactions..." oninput="renderTransactions()"><button class="btn secondary" onclick="exportCSV('transactions')">Export CSV</button><button class="btn dark" onclick="printLedger()">Print Ledger</button></div>
+ <div class="panel"><h3>Complete Stock Ledger</h3><div class="tablewrap"><table><thead><tr><th>Date/Time</th><th>Transaction No.</th><th>Type</th><th>Module</th><th>Code</th><th>Item</th><th>Shade</th><th>Batch</th><th>In</th><th>Out</th><th>Location</th></tr></thead><tbody id="txTable"></tbody></table></div></div>
+</section>
+
+<section id="audit" class="page">
+ <div class="panel"><h3>Physical Stock Audit</h3><form class="formgrid" onsubmit="auditSubmit(event)">
+  <div class="field"><label>Module</label><select id="auditModule"><option>Packing Material</option><option>Finished Goods</option></select></div>
+  <div class="field"><label>Item / Product</label><input id="auditItem" required></div><div class="field"><label>Batch (optional)</label><input id="auditBatch"></div>
+  <div class="field"><label>System Qty</label><input id="auditSystem" type="number" required></div><div class="field"><label>Physical Qty</label><input id="auditPhysical" type="number" required></div><div class="field"><label>Remarks</label><input id="auditReason"></div>
+  <button class="btn primary full" type="submit">Save Audit</button></form></div>
+ <div class="panel" style="margin-top:18px"><h3>Audit History</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>Module</th><th>Item</th><th>Batch</th><th>System</th><th>Physical</th><th>Variance</th><th>Remarks</th></tr></thead><tbody id="auditTable"></tbody></table></div></div>
+</section>
+
+<section id="reports" class="page">
+ <div class="cards">
+  <div class="card"><div class="label">PM Stock Summary</div><button class="btn secondary" onclick="exportCSV('packing')">Download</button></div>
+  <div class="card"><div class="label">FG Stock / Batch</div><button class="btn secondary" onclick="exportCSV('finished')">Download</button></div>
+  <div class="card"><div class="label">Stock Ledger</div><button class="btn secondary" onclick="exportCSV('transactions')">Download</button></div>
+  <div class="card"><div class="label">FEFO / Expiry</div><button class="btn secondary" onclick="exportCSV('finished')">Download</button></div>
+  <div class="card"><div class="label">Audit Report</div><button class="btn secondary" onclick="exportCSV('audit')">Download</button></div>
+ </div>
+ <div class="panel" style="margin-top:18px"><h3>Management Summary</h3><div id="reportSummary"></div></div>
+</section>
+
+<section id="masters" class="page">
+ <div class="panel"><h3>Master Data</h3><div class="toolbar"><button class="btn primary" onclick="openModal('pmMaster')">+ Packing Material</button><button class="btn primary" onclick="openModal('fgMaster')">+ Finished Good</button></div>
+ <div class="tablewrap"><table><thead><tr><th>Module</th><th>Code</th><th>Name</th><th>Shade</th><th>Shade Code</th><th>UOM</th><th>Min Stock</th><th>Location</th></tr></thead><tbody id="masterTable"></tbody></table></div></div>
+</section>
+
+<section id="hostcontrol" class="page">
+  <div class="hero">
+    <div class="kicker" style="color:#c4b5fd">Central Administration</div>
+    <h2>Host Control System</h2>
+    <p>Central control for application status, data protection, access, and store operations.</p>
+  </div>
+
+  <div class="cards">
+    <div class="card"><div class="label">System Status</div><div class="value green" id="hostStatus">ONLINE</div><div class="small">Local application</div></div>
+    <div class="card"><div class="label">Current User</div><div class="value" style="font-size:20px" id="hostUser">Admin</div><div class="small">Host administrator</div></div>
+    <div class="card"><div class="label">PM Records</div><div class="value" id="hostPM">0</div><div class="small">Packing materials</div></div>
+    <div class="card"><div class="label">FG Records</div><div class="value" id="hostFG">0</div><div class="small">Finished goods batches</div></div>
+    <div class="card"><div class="label">Transactions</div><div class="value" id="hostTx">0</div><div class="small">Stock movements</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h3>Host Actions</h3>
+      <div class="quick">
+        <button class="btn primary" onclick="hostBackup()">Backup Data</button>
+        <button class="btn secondary" onclick="hostRefresh()">Refresh System</button>
+        <button class="btn secondary" onclick="hostExportAll()">Export All Data</button>
+        <button class="btn dark" onclick="hostPrintStatus()">Print Status</button>
+        <button class="btn danger" onclick="hostClearTransactions()">Clear Transactions</button>
+        <button class="btn danger" onclick="hostReset()">Reset Application</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Host Configuration</h3>
+      <form class="formgrid" onsubmit="hostSaveConfig(event)">
+        <div class="field"><label>Host Name</label><input id="hostName" value="KOLOR ACTIV HOST"></div>
+        <div class="field"><label>Application Role</label>
+          <select id="hostRole"><option>Host Administrator</option><option>Store Manager</option><option>Checker</option><option>Viewer</option></select>
+        </div>
+        <div class="field"><label>System Mode</label>
+          <select id="hostMode"><option>LIVE</option><option>MAINTENANCE</option><option>READ ONLY</option></select>
+        </div>
+        <div class="field full"><label>Host Remarks</label><textarea id="hostRemarks" placeholder="Enter host-level instructions or remarks"></textarea></div>
+        <button class="btn primary full">Save Host Configuration</button>
+      </form>
+    </div>
+  </div>
+
+
+  <div class="panel" style="margin-top:18px">
+    <h3>Host Data Administration</h3>
+    <p class="small">Host Administrator can edit or delete master records and stock records. Every host action is recorded in the Host Control Log.</p>
+    <div class="toolbar">
+      <button class="btn primary" onclick="hostOpenEditPM()">Edit Packing Material</button>
+      <button class="btn primary" onclick="hostOpenEditFG()">Edit Finished Goods</button>
+      <button class="btn danger" onclick="hostDeleteAllTransactions()">Delete Transaction History</button>
+      <button class="btn danger" onclick="hostDeleteAllAudits()">Delete Audit History</button>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:18px">
+    <h3>Host Control Log</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Date/Time</th><th>Action</th><th>User</th><th>Status</th></tr></thead>
+        <tbody id="hostLog"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+</main></div>
+
+<div class="modal" id="modal"><div class="modalbox"><button class="close" onclick="closeModal()">×</button><div id="modalContent"></div></div></div>
+
+<script>
+const KEY='kolorActivStoreV2';
+const old=JSON.parse(localStorage.getItem('kolorActivStoreV1')||'null');
+let db=JSON.parse(localStorage.getItem(KEY)||'null')||{
+ pm:[
+  {id:uid(),code:'PM-001',name:'Lipstick Container',shadeName:'Ruby Red',shadeCode:'RD01',uom:'PCS',stock:5000,min:1000,max:10000,loc:'A-01-01',active:true},
+  {id:uid(),code:'PM-002',name:'Compact Box',shadeName:'',shadeCode:'',uom:'PCS',stock:850,min:1000,max:5000,loc:'A-01-02',active:true},
+  {id:uid(),code:'',name:'Outer Carton',shadeName:'',shadeCode:'',uom:'PCS',stock:2500,min:500,max:5000,loc:'A-02-01',active:true}
+ ],
+ fg:[
+  {id:uid(),code:'KA-LP-001',name:'Kolor Activ Lipstick',shadeName:'Ruby Red',shadeCode:'RD01',batch:'KA260801',qty:1200,uom:'PCS',mfg:'2026-08-01',expiry:'2028-07-31',loc:'FG-01-01'},
+  {id:uid(),code:'KA-CP-002',name:'Kolor Activ Compact',shadeName:'Natural',shadeCode:'NT01',batch:'KA260802',qty:650,uom:'PCS',mfg:'2026-08-02',expiry:'2028-08-01',loc:'FG-01-02'}
+ ],
+ tx:[],audits:[],seq:{PMISS:0,FGREC:0,FGISS:0,FGTRF:0,PMTRF:0,PMREC:0}
+};
+if(old && !localStorage.getItem(KEY)){
+ db.pm=(old.pm||[]).map(x=>({...x,id:x.id||uid(),shadeName:x.shadeName||'',shadeCode:x.shadeCode||'',active:true}));
+ db.fg=(old.fg||[]).map(x=>({...x,id:x.id||uid(),shadeName:x.shadeName||'',shadeCode:x.shadeCode||'',uom:x.uom||'PCS'}));
+ db.tx=old.tx||[];db.audits=old.audits||[];localStorage.setItem(KEY,JSON.stringify(db));
+}
+function uid(){return 'id-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7)}
+function save(){localStorage.setItem(KEY,JSON.stringify(db));renderAll()}
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function today(){return new Date().toISOString().slice(0,10)}
+function nextNo(prefix,key){db.seq[key]=(db.seq[key]||0)+1;return prefix+'-'+today().replaceAll('-','')+'-'+String(db.seq[key]).padStart(3,'0')}
+function show(id,btn){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));if(btn)btn.classList.add('active');document.getElementById('title').textContent={dashboard:'Store Dashboard',packing:'Packing Material Store',finished:'Finished Goods Store',transactions:'Stock Ledger',audit:'Physical Stock Audit',reports:'Management Reports',masters:'Master Data',hostcontrol:'Host Control System'}[id]}
+function openModal(type){
+ let c='';
+ if(type==='pmReceipt')c=`<h2>Packing Material Receipt</h2><form class="formgrid" onsubmit="pmReceipt(event)">
+ <div class="field"><label>Receipt No.</label><input value="${nextNo('PM-REC','PMREC')}" id="rNo" readonly></div>
+ <div class="field"><label>Receipt Date</label><input id="rDate" type="date" value="${today()}" required></div><div class="field"><label>Material Code (Optional)</label><input id="rCode" placeholder="Can be blank"></div>
+ <div class="field"><label>Material Name *</label><select id="rName" required onchange="fillPM('r')"><option value="">Select material</option>${db.pm.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}${x.code?' — '+esc(x.code):''}</option>`).join('')}</select></div>
+ <div class="field"><label>Shade Name (Optional)</label><input id="rShade"></div><div class="field"><label>Shade Code (Optional)</label><input id="rShadeCode"></div>
+ <div class="field"><label>Quantity *</label><input id="rQty" type="number" min="1" required></div><div class="field"><label>Rack / Bin</label><input id="rLoc"></div><div class="field"><label>PO / GRN No.</label><input id="rRef"></div>
+ <div class="field full"><label>Remarks</label><textarea id="rRemarks"></textarea></div><button class="btn primary full">Save Receipt & Update Stock</button></form>`;
+ if(type==='pmIssue')c=`<h2>Packing Material Issue Pass</h2><form class="formgrid" onsubmit="pmIssue(event)">
+ <div class="field"><label>Issue Pass No.</label><input id="iNo" value="${nextNo('PM-ISS','PMISS')}" readonly></div><div class="field"><label>Issue Date</label><input id="iDate" type="date" value="${today()}" required></div><div class="field"><label>Department *</label><select id="iDept" required><option>Production</option><option>Filling</option><option>Packing</option><option>QA/QC</option><option>R&D</option><option>Dispatch</option><option>Other</option></select></div>
+ <div class="field"><label>Material Name *</label><select id="iName" required onchange="fillPM('i')"><option value="">Select material</option>${db.pm.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}${x.code?' — '+esc(x.code):''}</option>`).join('')}</select></div>
+ <div class="field"><label>Material Code (Optional)</label><input id="iCode" placeholder="Can be blank"></div><div class="field"><label>Shade Name (Optional)</label><input id="iShade"></div>
+ <div class="field"><label>Shade Code (Optional)</label><input id="iShadeCode"></div><div class="field"><label>UOM</label><input id="iUom" readonly></div><div class="field"><label>Available Stock</label><input id="iAvail" readonly></div>
+ <div class="field"><label>Issue Quantity *</label><input id="iQty" type="number" min="1" required></div><div class="field"><label>Requested By</label><input id="iRequested"></div><div class="field"><label>Approved By</label><input id="iApproved"></div>
+ <div class="field"><label>Issue Request No.</label><input id="iRef"></div><div class="field full"><label>Remarks</label><textarea id="iRemarks"></textarea></div>
+ <button class="btn primary full">Issue Material & Generate Pass</button></form>`;
+ if(type==='pmMaster')c=`<h2>Packing Material Master</h2><form class="formgrid" onsubmit="pmMaster(event)">
+ <div class="field"><label>Material Code (Optional)</label><input id="mCode" placeholder="Optional"></div><div class="field"><label>Material Name *</label><input id="mName" required></div><div class="field"><label>Shade Name (Optional)</label><input id="mShade"></div>
+ <div class="field"><label>Shade Code (Optional)</label><input id="mShadeCode"></div><div class="field"><label>UOM *</label><input id="mUom" value="PCS" required></div><div class="field"><label>Minimum Stock</label><input id="mMin" type="number" value="0"></div>
+ <div class="field"><label>Maximum Stock</label><input id="mMax" type="number" value="0"></div><div class="field"><label>Rack / Bin</label><input id="mLoc"></div><div class="field"><label>Remarks</label><input id="mRemarks"></div>
+ <button class="btn primary full">Add Material</button></form>`;
+ if(type==='fgMaster')c=`<h2>Finished Goods Master</h2><form class="formgrid" onsubmit="fgMaster(event)">
+ <div class="field"><label>Product Code *</label><input id="gmCode" required></div><div class="field"><label>Product Name *</label><input id="gmName" required></div><div class="field"><label>Shade Name (Optional)</label><input id="gmShade"></div>
+ <div class="field"><label>Shade Code (Optional)</label><input id="gmShadeCode"></div><div class="field"><label>UOM</label><input id="gmUom" value="PCS"></div><div class="field"><label>Default Rack / Bin</label><input id="gmLoc"></div>
+ <button class="btn primary full">Add Product</button></form>`;
+ if(type==='fgReceipt')c=`<h2>Finished Goods Receipt</h2><form class="formgrid" onsubmit="fgReceipt(event)">
+ <div class="field"><label>FG Receipt No.</label><input id="fNo" value="${nextNo('FG-REC','FGREC')}" readonly></div><div class="field"><label>Receipt Date</label><input id="fDate" type="date" value="${today()}" required></div><div class="field"><label>Product Name *</label><select id="fProduct" required onchange="fillFG()"><option value="">Select product</option>${fgMasters().map(x=>`<option value="${esc(x.id)}">${esc(x.name)} — ${esc(x.code)}</option>`).join('')}</select></div>
+ <div class="field"><label>Product Code</label><input id="fCode" readonly></div><div class="field"><label>Shade Name (Optional)</label><input id="fShade"></div><div class="field"><label>Shade Code (Optional)</label><input id="fShadeCode"></div>
+ <div class="field"><label>Batch Number *</label><input id="fBatch" required></div><div class="field"><label>Quantity *</label><input id="fQty" type="number" min="1" required></div><div class="field"><label>UOM</label><input id="fUom" value="PCS"></div>
+ <div class="field"><label>MFD *</label><input id="fMfg" type="date" required></div><div class="field"><label>EXP *</label><input id="fExp" type="date" required></div><div class="field"><label>Rack / Bin *</label><input id="fLoc" required></div>
+ <div class="field"><label>Reference No.</label><input id="fRef"></div><div class="field full"><label>Remarks</label><textarea id="fRemarks"></textarea></div>
+ <button class="btn primary full">Receive FG & Generate Receipt</button></form>`;
+ if(type==='fgIssue')c=`<h2>Finished Goods Issue Pass — FEFO</h2><form class="formgrid" onsubmit="fgIssue(event)">
+ <div class="field"><label>FG Issue Pass No.</label><input id="fiNo" value="${nextNo('FG-ISS','FGISS')}" readonly></div><div class="field"><label>Issue Date</label><input id="fiDate" type="date" value="${today()}"></div><div class="field"><label>Product *</label><select id="fiProduct" required onchange="fillFGIssue()"><option value="">Select product</option>${fgMasters().map(x=>`<option value="${esc(x.id)}">${esc(x.name)} — ${esc(x.code)}</option>`).join('')}</select></div>
+ <div class="field"><label>Shade</label><input id="fiShade" readonly></div><div class="field"><label>Batch (FEFO recommended)</label><select id="fiBatch" required></select></div><div class="field"><label>Available Qty</label><input id="fiAvail" readonly></div>
+ <div class="field"><label>Issue Quantity *</label><input id="fiQty" type="number" min="1" required></div><div class="field"><label>Department / Customer *</label><input id="fiDept" required></div><div class="field"><label>Reference / Order No.</label><input id="fiRef"></div>
+ <div class="field"><label>Requested By</label><input id="fiRequested"></div><div class="field"><label>Approved By</label><input id="fiApproved"></div><div class="field"><label>Remarks</label><input id="fiRemarks"></div>
+ <div class="field full"><div id="fefoNote" class="badge bgreen">Select a product to see FEFO recommendation</div></div><button class="btn primary full">Issue FG & Generate Pass</button></form>`;
+ if(type==='fgTransfer')c=`<h2>Finished Goods Stock Transfer</h2><form class="formgrid" onsubmit="fgTransfer(event)">
+ <div class="field"><label>Transfer No.</label><input id="ftNo" value="${nextNo('FG-TRF','FGTRF')}" readonly></div><div class="field"><label>Transfer Date</label><input id="ftDate" type="date" value="${today()}"></div><div class="field"><label>Product *</label><select id="ftProduct" required onchange="fillFGTransfer()"><option value="">Select product</option>${db.fg.filter(x=>x.qty>0).map(x=>`<option value="${esc(x.id)}">${esc(x.name)} | ${esc(x.batch)}</option>`).join('')}</select></div>
+ <div class="field"><label>Product Code</label><input id="ftCode" readonly></div><div class="field"><label>Shade</label><input id="ftShade" readonly></div><div class="field"><label>Batch</label><input id="ftBatch" readonly></div>
+ <div class="field"><label>Quantity *</label><input id="ftQty" type="number" min="1" required></div><div class="field"><label>MFD</label><input id="ftMfg" readonly></div><div class="field"><label>EXP</label><input id="ftExp" readonly></div>
+ <div class="field"><label>From Location</label><input id="ftFrom" readonly></div><div class="field"><label>To Location *</label><input id="ftTo" required></div><div class="field"><label>Reason</label><input id="ftReason"></div>
+ <button class="btn primary full">Transfer FG</button></form>`;
+ if(type==='pmTransfer')c=`<h2>Packing Material Stock Transfer</h2><form class="formgrid" onsubmit="pmTransfer(event)">
+ <div class="field"><label>Transfer No.</label><input id="ptNo" value="${nextNo('PM-TRF','PMTRF')}" readonly></div><div class="field"><label>Transfer Date</label><input id="ptDate" type="date" value="${today()}"></div><div class="field"><label>Material *</label><select id="ptProduct" required onchange="fillPMTransfer()"><option value="">Select material</option>${db.pm.filter(x=>x.stock>0).map(x=>`<option value="${esc(x.id)}">${esc(x.name)}${x.code?' — '+esc(x.code):''}</option>`).join('')}</select></div>
+ <div class="field"><label>Material Code</label><input id="ptCode" readonly></div><div class="field"><label>Shade</label><input id="ptShade" readonly></div><div class="field"><label>UOM</label><input id="ptUom" readonly></div>
+ <div class="field"><label>Quantity *</label><input id="ptQty" type="number" min="1" required></div><div class="field"><label>From Location</label><input id="ptFrom" readonly></div><div class="field"><label>To Location *</label><input id="ptTo" required></div>
+ <div class="field"><label>Reason</label><input id="ptReason"></div><button class="btn primary full">Transfer Material</button></form>`;
+ document.getElementById('modalContent').innerHTML=c;document.getElementById('modal').classList.add('show');
+}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+function fgMasters(){return db.fg.filter(x=>x.batch==='MASTER')}
+function fillPM(p){let id=document.getElementById(p+'Name').value,x=db.pm.find(z=>z.id===id);if(!x)return;if(p==='i'){iCode.value=x.code||'';iShade.value=x.shadeName||'';iShadeCode.value=x.shadeCode||'';iUom.value=x.uom;iAvail.value=x.stock}if(p==='r'){rCode.value=x.code||'';rShade.value=x.shadeName||'';rShadeCode.value=x.shadeCode||'';rLoc.value=x.loc||''}}
+function fillFG(){let x=fgMasters().find(z=>z.id===fProduct.value);if(x){fCode.value=x.code;fShade.value=x.shadeName||'';fShadeCode.value=x.shadeCode||'';fUom.value=x.uom||'PCS';fLoc.value=x.loc||''}}
+function fillFGIssue(){let m=fgMasters().find(z=>z.id===fiProduct.value);fiShade.value=m?(m.shadeName||''):'';let arr=db.fg.filter(x=>x.code===(m?.code||'')&&x.qty>0).sort((a,b)=>new Date(a.expiry)-new Date(b.expiry));fiBatch.innerHTML=arr.map((x,i)=>`<option value="${esc(x.id)}">${esc(x.batch)} | Qty ${x.qty} | EXP ${x.expiry}${i===0?' | FEFO FIRST':''}</option>`).join('');updateFGBatch();fefoNote.textContent=arr.length?'FEFO FIRST: '+arr[0].batch+' — EXP '+arr[0].expiry:'No stock available';fefoNote.className='badge '+(arr.length?'bgreen':'bred')}
+function updateFGBatch(){let x=db.fg.find(z=>z.id===fiBatch.value);fiAvail.value=x?x.qty:''}
+document.addEventListener('change',e=>{if(e.target.id==='fiBatch')updateFGBatch()})
+function fillFGTransfer(){let x=db.fg.find(z=>z.id===ftProduct.value);if(x){ftCode.value=x.code;ftShade.value=x.shadeName||'';ftBatch.value=x.batch;ftQty.max=x.qty;ftMfg.value=x.mfg;ftExp.value=x.expiry;ftFrom.value=x.loc}}
+function fillPMTransfer(){let x=db.pm.find(z=>z.id===ptProduct.value);if(x){ptCode.value=x.code||'';ptShade.value=x.shadeName||'';ptUom.value=x.uom;ptQty.max=x.stock;ptFrom.value=x.loc}}
+function logTx(o){db.tx.unshift({...o,time:new Date().toLocaleString('en-IN'),user:'Admin'});save()}
+function pmMaster(e){e.preventDefault();db.pm.push({id:uid(),code:mCode.value.trim(),name:mName.value.trim(),shadeName:mShade.value.trim(),shadeCode:mShadeCode.value.trim(),uom:mUom.value,stock:0,min:+mMin.value||0,max:+mMax.value||0,loc:mLoc.value||'-',active:true});save();closeModal()}
+function fgMaster(e){e.preventDefault();if(fgMasters().some(x=>x.code===gmCode.value.trim()))return alert('Product code already exists');db.fg.push({id:uid(),code:gmCode.value.trim(),name:gmName.value.trim(),shadeName:gmShade.value.trim(),shadeCode:gmShadeCode.value.trim(),uom:gmUom.value||'PCS',batch:'MASTER',qty:0,mfg:'',expiry:'',loc:gmLoc.value||'-'});save();closeModal()}
+function pmReceipt(e){e.preventDefault();let x=db.pm.find(z=>z.id===rName.value);if(!x)return;if(+rQty.value<=0)return alert('Enter valid quantity');x.stock+=+rQty.value;x.loc=rLoc.value||x.loc;logTx({no:rNo.value,type:'RECEIPT',module:'Packing Material',code:x.code,name:x.name,shade:x.shadeName,shadeCode:x.shadeCode,batch:'',mfd:'',expiry:'',qtyIn:+rQty.value,qtyOut:0,loc:x.loc,ref:rRef.value});closeModal();printPMIssueLike(rNo.value,'PACKING MATERIAL RECEIPT',rDate.value,'',[[x.code,x.name,x.shadeName,x.uom,rQty.value]],'')}
+function pmIssue(e){e.preventDefault();let x=db.pm.find(z=>z.id===iName.value),q=+iQty.value;if(!x)return;if(q<=0||q>x.stock)return alert('Insufficient stock');x.stock-=q;logTx({no:iNo.value,type:'ISSUE',module:'Packing Material',code:x.code,name:x.name,shade:iShade.value||x.shadeName,shadeCode:iShadeCode.value||x.shadeCode,batch:'',mfd:'',expiry:'',qtyIn:0,qtyOut:q,loc:x.loc,department:iDept.value,ref:iRef.value});closeModal();printPMIssue(iNo.value)}
+function fgReceipt(e){e.preventDefault();let m=fgMasters().find(z=>z.id===fProduct.value);if(!m)return;let q=+fQty.value;if(q<=0)return alert('Enter valid quantity');if(db.fg.some(x=>x.batch===fBatch.value.trim()&&x.code===m.code))return alert('Same product and batch already exists');let x={id:uid(),code:m.code,name:m.name,shadeName:fShade.value,shadeCode:fShadeCode.value,batch:fBatch.value.trim(),qty:q,uom:fUom.value||'PCS',mfg:fMfg.value,expiry:fExp.value,loc:fLoc.value};db.fg.push(x);logTx({no:fNo.value,type:'RECEIPT',module:'Finished Goods',code:x.code,name:x.name,shade:x.shadeName,shadeCode:x.shadeCode,batch:x.batch,mfd:x.mfg,expiry:x.expiry,qtyIn:q,qtyOut:0,loc:x.loc,ref:fRef.value});closeModal();printFGReceipt(x,fNo.value,fDate.value)}
+function fgIssue(e){e.preventDefault();let x=db.fg.find(z=>z.id===fiBatch.value),q=+fiQty.value;if(!x||q<=0||q>x.qty)return alert('Invalid quantity / insufficient batch stock');x.qty-=q;logTx({no:fiNo.value,type:'ISSUE',module:'Finished Goods',code:x.code,name:x.name,shade:x.shadeName,shadeCode:x.shadeCode,batch:x.batch,mfd:x.mfg,expiry:x.expiry,qtyIn:0,qtyOut:q,loc:x.loc,department:fiDept.value,ref:fiRef.value});closeModal();printFGIssue(x,fiNo.value,fiDate.value,q,fiDept.value)}
+function fgTransfer(e){e.preventDefault();let x=db.fg.find(z=>z.id===ftProduct.value),q=+ftQty.value;if(!x||q<=0||q>x.qty)return alert('Invalid quantity / insufficient stock');let from=x.loc;x.loc=ftTo.value;logTx({no:ftNo.value,type:'TRANSFER',module:'Finished Goods',code:x.code,name:x.name,shade:x.shadeName,shadeCode:x.shadeCode,batch:x.batch,mfd:x.mfg,expiry:x.expiry,qtyIn:0,qtyOut:q,loc:from+' → '+x.loc,fromLocation:from,toLocation:x.loc,ref:ftReason.value});closeModal();printTransfer('FG STOCK TRANSFER',ftNo.value,ftDate.value,[[x.code,x.name,x.shadeName,x.batch,q,x.mfg,x.expiry,from,x.loc]])}
+function pmTransfer(e){e.preventDefault();let x=db.pm.find(z=>z.id===ptProduct.value),q=+ptQty.value;if(!x||q<=0||q>x.stock)return alert('Invalid quantity / insufficient stock');let from=x.loc;x.loc=ptTo.value;logTx({no:ptNo.value,type:'TRANSFER',module:'Packing Material',code:x.code,name:x.name,shade:x.shadeName,shadeCode:x.shadeCode,batch:'',mfd:'',expiry:'',qtyIn:0,qtyOut:q,loc:from+' → '+x.loc,fromLocation:from,toLocation:x.loc,ref:ptReason.value});closeModal();printTransfer('PACKING MATERIAL STOCK TRANSFER',ptNo.value,ptDate.value,[[x.code,x.name,x.shadeName,q,x.uom,from,x.loc]])}
+function auditSubmit(e){e.preventDefault();let s=+auditSystem.value,p=+auditPhysical.value;db.audits.unshift({date:new Date().toLocaleString('en-IN'),module:auditModule.value,item:auditItem.value,batch:auditBatch.value,system:s,physical:p,var:p-s,remarks:auditReason.value});save();e.target.reset()}
+function status(x){return x.stock<=0?'OUT':x.stock<x.min?'LOW':'OK'}
+function expiryStatus(x){let d=Math.ceil((new Date(x.expiry)-new Date())/86400000);return d<0?'EXPIRED':d<=30?'≤30 DAYS':d<=90?'≤90 DAYS':'HEALTHY'}
+
+// Host Control System
+const HOST_KEY='kolorActivHostControlV1';
+let hostCfg=JSON.parse(localStorage.getItem(HOST_KEY)||'null')||{
+  name:'KOLOR ACTIV HOST', role:'Host Administrator', mode:'LIVE', remarks:'', log:[]
+};
+
+function hostSave(){
+  localStorage.setItem(HOST_KEY,JSON.stringify(hostCfg));
+}
+function hostLog(action,status='SUCCESS'){
+  hostCfg.log.unshift({time:new Date().toLocaleString('en-IN'),action,user:hostCfg.role,status});
+  hostCfg.log=hostCfg.log.slice(0,100);
+  hostSave();
+  renderHost();
+}
+function renderHost(){
+  const ids={hostPM:db.pm.length,hostFG:db.fg.filter(x=>x.batch!=='MASTER').length,hostTx:db.tx.length};
+  Object.entries(ids).forEach(([id,val])=>{const el=document.getElementById(id);if(el)el.textContent=val});
+  const hn=document.getElementById('hostName'), hr=document.getElementById('hostRole'),
+        hm=document.getElementById('hostMode'), hrem=document.getElementById('hostRemarks');
+  if(hn)hn.value=hostCfg.name||'KOLOR ACTIV HOST';
+  if(hr)hr.value=hostCfg.role||'Host Administrator';
+  if(hm)hm.value=hostCfg.mode||'LIVE';
+  if(hrem)hrem.value=hostCfg.remarks||'';
+  const hu=document.getElementById('hostUser'); if(hu)hu.textContent=hostCfg.role||'Admin';
+  const hs=document.getElementById('hostStatus'); if(hs)hs.textContent=hostCfg.mode==='MAINTENANCE'?'MAINTENANCE':hostCfg.mode==='READ ONLY'?'READ ONLY':'ONLINE';
+  const body=document.getElementById('hostLog');
+  if(body) body.innerHTML=hostCfg.log.map(x=>`<tr><td>${esc(x.time)}</td><td>${esc(x.action)}</td><td>${esc(x.user)}</td><td><span class="badge bgreen">${esc(x.status)}</span></td></tr>`).join('')||'<tr><td colspan="4" class="empty">No host actions yet</td></tr>';
+}
+function hostSaveConfig(e){
+  e.preventDefault();
+  hostCfg.name=hostName.value.trim()||'KOLOR ACTIV HOST';
+  hostCfg.role=hostRole.value;
+  hostCfg.mode=hostMode.value;
+  hostCfg.remarks=hostRemarks.value.trim();
+  hostSave(); hostLog('Host configuration updated');
+  alert('Host configuration saved successfully.');
+}
+function hostBackup(){
+  const payload={version:'Host Control Backup V1',date:new Date().toISOString(),database:db,host:hostCfg};
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
+  a.download='kolor_activ_host_backup_'+today()+'.json'; a.click();
+  hostLog('Database backup downloaded');
+}
+function hostExportAll(){
+  const rows=[
+    ['SECTION','TYPE','CODE','NAME','SHADE','BATCH','QTY','LOCATION'],
+    ...db.pm.map(x=>['PACKING MATERIAL','MASTER',x.code,x.name,x.shadeName,'',x.stock,x.loc]),
+    ...db.fg.filter(x=>x.batch!=='MASTER').map(x=>['FINISHED GOODS','BATCH',x.code,x.name,x.shadeName,x.batch,x.qty,x.loc]),
+    ...db.tx.map(x=>['TRANSACTION',x.type,x.code,x.name,x.shade,x.batch,(x.qtyIn||0)-(x.qtyOut||0),x.loc])
+  ];
+  const csv=rows.map(r=>r.map(v=>`"${String(v??'').replaceAll('"','""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='kolor_activ_host_export_'+today()+'.csv'; a.click();
+  hostLog('Complete host data exported');
+}
+function hostRefresh(){
+  renderAll(); renderHost(); hostLog('System data refreshed');
+  alert('Host control system refreshed.');
+}
+function hostPrintStatus(){
+  printShell('HOST CONTROL SYSTEM STATUS',`
+    <div class="meta">
+      <div><b>Host:</b> ${esc(hostCfg.name)}</div>
+      <div><b>Role:</b> ${esc(hostCfg.role)}</div>
+      <div><b>Mode:</b> ${esc(hostCfg.mode)}</div>
+      <div><b>Status:</b> ONLINE</div>
+    </div>
+    <table>
+      <tr><th>Module</th><th>Records</th></tr>
+      <tr><td>Packing Materials</td><td>${db.pm.length}</td></tr>
+      <tr><td>Finished Goods Batches</td><td>${db.fg.filter(x=>x.batch!=='MASTER').length}</td></tr>
+      <tr><td>Stock Transactions</td><td>${db.tx.length}</td></tr>
+      <tr><td>Physical Audits</td><td>${db.audits.length}</td></tr>
+    </table>`);
+  hostLog('Host status report printed');
+}
+function hostClearTransactions(){
+  if(!confirm('Clear all stock transaction history? This cannot be undone.')) return;
+  db.tx=[]; save(); hostLog('Transaction history cleared');
+}
+function hostReset(){
+  if(!confirm('Reset the complete application data to the original demo data? This cannot be undone.')) return;
+  localStorage.removeItem(KEY);
+  localStorage.removeItem('kolorActivStoreV1');
+  location.reload();
+}
+
+
+function hostRequireAdmin(){
+  if((hostCfg.role||'')!=='Host Administrator'){
+    alert('Host Administrator permission required.');
+    return false;
+  }
+  return true;
+}
+function hostOpenEditPM(id){
+  if(!hostRequireAdmin()) return;
+  let x=id?db.pm.find(z=>z.id===id):db.pm[0];
+  if(!x){alert('No packing material record found.');return;}
+  document.getElementById('modalContent').innerHTML=`<h2>Host Edit — Packing Material</h2>
+  <form class="formgrid" onsubmit="hostSavePMEdit(event,'${esc(x.id)}')">
+    <div class="field"><label>Material Code</label><input id="hePMCode" value="${esc(x.code)}"></div>
+    <div class="field"><label>Material Name</label><input id="hePMName" value="${esc(x.name)}" required></div>
+    <div class="field"><label>Shade</label><input id="hePMShade" value="${esc(x.shadeName)}"></div>
+    <div class="field"><label>Shade Code</label><input id="hePMShadeCode" value="${esc(x.shadeCode)}"></div>
+    <div class="field"><label>UOM</label><input id="hePMUom" value="${esc(x.uom)}"></div>
+    <div class="field"><label>Stock</label><input id="hePMStock" type="number" min="0" value="${x.stock}"></div>
+    <div class="field"><label>Minimum Stock</label><input id="hePMMin" type="number" min="0" value="${x.min}"></div>
+    <div class="field"><label>Maximum Stock</label><input id="hePMMax" type="number" min="0" value="${x.max}"></div>
+    <div class="field"><label>Rack / Bin</label><input id="hePMLoc" value="${esc(x.loc)}"></div>
+    <button class="btn primary full">Save Changes</button>
+  </form>`;
+  document.getElementById('modal').classList.add('show');
+}
+function hostSavePMEdit(e,id){
+  e.preventDefault(); if(!hostRequireAdmin()) return;
+  let x=db.pm.find(z=>z.id===id); if(!x)return;
+  Object.assign(x,{code:hePMCode.value.trim(),name:hePMName.value.trim(),shadeName:hePMShade.value.trim(),
+    shadeCode:hePMShadeCode.value.trim(),uom:hePMUom.value.trim(),stock:+hePMStock.value||0,
+    min:+hePMMin.value||0,max:+hePMMax.value||0,loc:hePMLoc.value.trim()||'-'});
+  save(); closeModal(); hostLog('Edited packing material: '+x.name);
+}
+function hostDeletePM(id){
+  if(!hostRequireAdmin()) return;
+  let i=db.pm.findIndex(z=>z.id===id); if(i<0)return;
+  let x=db.pm[i];
+  if(!confirm('Delete packing material "'+x.name+'"?'))return;
+  db.pm.splice(i,1); save(); hostLog('Deleted packing material: '+x.name);
+}
+function hostOpenEditFG(id){
+  if(!hostRequireAdmin()) return;
+  let x=id?db.fg.find(z=>z.id===id && z.batch!=='MASTER'):db.fg.find(z=>z.batch!=='MASTER');
+  if(!x){alert('No finished goods batch found.');return;}
+  document.getElementById('modalContent').innerHTML=`<h2>Host Edit — Finished Goods Batch</h2>
+  <form class="formgrid" onsubmit="hostSaveFGEdit(event,'${esc(x.id)}')">
+    <div class="field"><label>Product Code</label><input id="heFGCode" value="${esc(x.code)}" required></div>
+    <div class="field"><label>Product Name</label><input id="heFGName" value="${esc(x.name)}" required></div>
+    <div class="field"><label>Shade</label><input id="heFGShade" value="${esc(x.shadeName)}"></div>
+    <div class="field"><label>Shade Code</label><input id="heFGShadeCode" value="${esc(x.shadeCode)}"></div>
+    <div class="field"><label>Batch</label><input id="heFGBatch" value="${esc(x.batch)}" required></div>
+    <div class="field"><label>Quantity</label><input id="heFGQty" type="number" min="0" value="${x.qty}"></div>
+    <div class="field"><label>MFD</label><input id="heFGMfd" type="date" value="${esc(x.mfg)}"></div>
+    <div class="field"><label>EXP</label><input id="heFGExp" type="date" value="${esc(x.expiry)}"></div>
+    <div class="field"><label>Rack / Bin</label><input id="heFGLoc" value="${esc(x.loc)}"></div>
+    <button class="btn primary full">Save Changes</button>
+  </form>`;
+  document.getElementById('modal').classList.add('show');
+}
+function hostSaveFGEdit(e,id){
+  e.preventDefault(); if(!hostRequireAdmin()) return;
+  let x=db.fg.find(z=>z.id===id); if(!x)return;
+  Object.assign(x,{code:heFGCode.value.trim(),name:heFGName.value.trim(),shadeName:heFGShade.value.trim(),
+    shadeCode:heFGShadeCode.value.trim(),batch:heFGBatch.value.trim(),qty:+heFGQty.value||0,
+    mfg:heFGMfd.value,expiry:heFGExp.value,loc:heFGLoc.value.trim()||'-'});
+  save(); closeModal(); hostLog('Edited finished goods batch: '+x.batch);
+}
+function hostDeleteFG(id){
+  if(!hostRequireAdmin()) return;
+  let i=db.fg.findIndex(z=>z.id===id && z.batch!=='MASTER'); if(i<0)return;
+  let x=db.fg[i];
+  if(!confirm('Delete finished goods batch "'+x.batch+'"?'))return;
+  db.fg.splice(i,1); save(); hostLog('Deleted finished goods batch: '+x.batch);
+}
+function hostDeleteAllTransactions(){
+  if(!hostRequireAdmin())return;
+  if(!confirm('Delete ALL transaction history? This cannot be undone.'))return;
+  db.tx=[];save();hostLog('Deleted all transaction history');
+}
+function hostDeleteAllAudits(){
+  if(!hostRequireAdmin())return;
+  if(!confirm('Delete ALL physical audit history? This cannot be undone.'))return;
+  db.audits=[];save();hostLog('Deleted all physical audit history');
+}
+
+function renderAll(){
+ let pmq=(document.getElementById('pmSearch')?.value||'').toLowerCase(),pms=(document.getElementById('pmStatus')?.value||'');
+ let pm=db.pm.filter(x=>JSON.stringify(x).toLowerCase().includes(pmq)).filter(x=>!pms||status(x)===pms);
+ document.getElementById('pmTable').innerHTML=pm.map(x=>`<tr><td>${esc(x.code||'—')}</td><td>${esc(x.name)}</td><td>${esc(x.shadeName||'—')}</td><td>${esc(x.shadeCode||'—')}</td><td>${esc(x.uom)}</td><td>${x.stock}</td><td>${x.min}</td><td>${esc(x.loc)}</td><td><span class="badge ${status(x)==='OK'?'bgreen':status(x)==='LOW'?'bamber':'bred'}">${status(x)}</span></td><td><button class="btn secondary" onclick="hostEditPM('${esc(x.id)}')">Edit</button>
+<button class="btn danger" onclick="hostDeletePM('${esc(x.id)}')">Delete</button></td></tr>`).join('')||'<tr><td colspan="11" class="empty">No records found</td></tr>';
+ let fgq=(document.getElementById('fgSearch')?.value||'').toLowerCase();
+ let fg=db.fg.filter(x=>x.batch!=='MASTER'&&JSON.stringify(x).toLowerCase().includes(fgq)).filter(x=>x.qty>0).sort((a,b)=>new Date(a.expiry)-new Date(b.expiry));
+ document.getElementById('fgTable').innerHTML=fg.map((x,i)=>{let st=expiryStatus(x);return `<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.shadeName||'—')}</td><td>${esc(x.batch)}</td><td>${x.qty}</td><td>${esc(x.mfg)}</td><td>${esc(x.expiry)}</td><td>${esc(x.loc)}</td><td><span class="badge ${i===0?'bgreen':st==='EXPIRED'||st==='≤30 DAYS'?'bred':st==='≤90 DAYS'?'bamber':'bblue'}">${i===0?'FEFO FIRST':st}</span></td>
+<td><button class="btn secondary" onclick="hostEditFG('${esc(x.id)}')">Edit</button>
+<button class="btn danger" onclick="hostDeleteFG('${esc(x.id)}')">Delete</button></td></tr>`}).join('')||'<tr><td colspan="10" class="empty">No FG stock found</td></tr>';
+ document.getElementById('pmCount').textContent=db.pm.length;document.getElementById('pmStock').textContent=db.pm.reduce((s,x)=>s+x.stock,0).toLocaleString();document.getElementById('lowCount').textContent=db.pm.filter(x=>x.stock<x.min).length;document.getElementById('fgProducts').textContent=fgMasters().length;document.getElementById('fgStock').textContent=db.fg.filter(x=>x.batch!=='MASTER').reduce((s,x)=>s+x.qty,0).toLocaleString();document.getElementById('fgCount').textContent=db.fg.filter(x=>x.batch!=='MASTER'&&x.qty>0).length;
+ let txToday=db.tx.filter(x=>x.time.startsWith(new Date().toLocaleDateString('en-IN')));document.getElementById('todayReceipts').textContent=txToday.filter(x=>x.type==='RECEIPT').length;document.getElementById('todayIssues').textContent=txToday.filter(x=>x.type==='ISSUE').length;document.getElementById('todayTransfers').textContent=txToday.filter(x=>x.type==='TRANSFER').length;
+ let alerts=db.fg.filter(x=>x.batch!=='MASTER'&&x.qty>0&&expiryStatus(x)!=='HEALTHY');document.getElementById('expiryAlerts').textContent=alerts.length;
+ document.getElementById('recent').innerHTML=db.tx.slice(0,10).map(x=>`<tr><td>${esc(x.time)}</td><td>${esc(x.no||'—')}</td><td>${esc(x.type)}</td><td>${esc(x.name)}</td><td>${x.qtyIn||x.qtyOut||0}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">No transactions yet</td></tr>';
+ document.getElementById('fefo').innerHTML=alerts.slice(0,10).map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.shadeName||'—')}</td><td>${esc(x.batch)}</td><td>${esc(x.expiry)}</td><td><span class="badge ${expiryStatus(x)==='EXPIRED'||expiryStatus(x)==='≤30 DAYS'?'bred':'bamber'}">${expiryStatus(x)}</span></td></tr>`).join('')||'<tr><td colspan="5" class="empty">No expiry alerts</td></tr>';
+ renderTransactions();document.getElementById('auditTable').innerHTML=db.audits.map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.module)}</td><td>${esc(x.item)}</td><td>${esc(x.batch||'')}</td><td>${x.system}</td><td>${x.physical}</td><td class="${x.var<0?'dangertext':''}">${x.var}</td><td>${esc(x.remarks||'')}</td></tr>`).join('');
+ document.getElementById('masterTable').innerHTML=db.pm.map(x=>`<tr><td>Packing Material</td><td>${esc(x.code||'—')}</td><td>${esc(x.name)}</td><td>${esc(x.shadeName||'—')}</td><td>${esc(x.shadeCode||'—')}</td><td>${esc(x.uom)}</td><td>${x.min}</td><td>${esc(x.loc)}</td></tr>`).join('')+fgMasters().map(x=>`<tr><td>Finished Goods</td><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.shadeName||'—')}</td><td>${esc(x.shadeCode||'—')}</td><td>${esc(x.uom)}</td><td>—</td><td>${esc(x.loc)}</td></tr>`).join('');
+ document.getElementById('reportSummary').innerHTML=`<p><b>Packing Material:</b> ${db.pm.length} items, total stock ${db.pm.reduce((s,x)=>s+x.stock,0).toLocaleString()}, low stock ${db.pm.filter(x=>x.stock<x.min).length}.</p><p><b>Finished Goods:</b> ${fgMasters().length} products, ${db.fg.filter(x=>x.batch!=='MASTER').length} batch records, total stock ${db.fg.filter(x=>x.batch!=='MASTER').reduce((s,x)=>s+x.qty,0).toLocaleString()}.</p><p><b>Expiry:</b> ${alerts.length} batch(es) require attention.</p>`;
+}
+function renderTransactions(){let q=(document.getElementById('searchTx')?.value||'').toLowerCase();document.getElementById('txTable').innerHTML=db.tx.filter(x=>JSON.stringify(x).toLowerCase().includes(q)).map(x=>`<tr><td>${esc(x.time)}</td><td>${esc(x.no||'')}</td><td>${esc(x.type)}</td><td>${esc(x.module)}</td><td>${esc(x.code||'—')}</td><td>${esc(x.name)}</td><td>${esc(x.shade||'—')}</td><td>${esc(x.batch||'—')}</td><td>${x.qtyIn||0}</td><td>${x.qtyOut||0}</td><td>${esc(x.loc||'')}</td></tr>`).join('')||'<tr><td colspan="11" class="empty">No transactions found</td></tr>'}
+function exportCSV(type){let rows=[];if(type==='packing')rows=[['Code','Material','Shade','Shade Code','UOM','Stock','Min','Location'],...db.pm.map(x=>[x.code,x.name,x.shadeName,x.shadeCode,x.uom,x.stock,x.min,x.loc])];if(type==='finished')rows=[['Code','Product','Shade','Shade Code','Batch','Qty','MFD','EXP','Location'],...db.fg.filter(x=>x.batch!=='MASTER').map(x=>[x.code,x.name,x.shadeName,x.shadeCode,x.batch,x.qty,x.mfg,x.expiry,x.loc])];if(type==='transactions')rows=[['Time','Transaction No.','Type','Module','Code','Item','Shade','Batch','MFD','EXP','Qty In','Qty Out','Location'],...db.tx.map(x=>[x.time,x.no,x.type,x.module,x.code,x.name,x.shade,x.batch,x.mfd,x.expiry,x.qtyIn,x.qtyOut,x.loc])];if(type==='audit')rows=[['Date','Module','Item','Batch','System','Physical','Variance','Remarks'],...db.audits.map(x=>[x.date,x.module,x.item,x.batch,x.system,x.physical,x.var,x.remarks])];let csv=rows.map(r=>r.map(v=>`"${String(v??'').replaceAll('"','""')}"`).join(',')).join('\\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=type+'_report.csv';a.click()}
+function printShell(title,body){let w=window.open('','_blank','width=900,height=700');if(!w)return alert('Please allow pop-ups for printing');w.document.write(`<html><head><title>${esc(title)}</title><style>body{font-family:Arial;padding:30px;color:#172033}h1{text-align:center;font-size:22px;margin:0 0 5px}h2{text-align:center;font-size:17px;margin:0 0 20px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #333;padding:8px;font-size:12px}th{background:#eee}.meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px}.sig{display:grid;grid-template-columns:repeat(4,1fr);gap:25px;margin-top:70px;text-align:center}.sig div{border-top:1px solid #333;padding-top:7px}@media print{button{display:none}}</style></head><body><h1>KOLOR ACTIV</h1><h2>${esc(title)}</h2>${body}<div class="sig"><div>Prepared By</div><div>Checked By</div><div>Approved By</div><div>Receiver / Store In-charge</div></div><script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close()}
+function printPMIssue(no){let tx=db.tx.find(x=>x.no===no);if(!tx)return alert('Select a generated issue transaction to print');printShell('PACKING MATERIAL ISSUE PASS',`<div class="meta"><div><b>Issue Pass No:</b> ${esc(tx.no)}</div><div><b>Date:</b> ${esc(tx.time)}</div><div><b>Department:</b> ${esc(tx.department||'')}</div><div><b>Reference:</b> ${esc(tx.ref||'')}</div></div><table><tr><th>S.No.</th><th>Material Code</th><th>Material Name</th><th>Shade</th><th>UOM</th><th>Issue Qty</th></tr><tr><td>1</td><td>${esc(tx.code||'—')}</td><td>${esc(tx.name)}</td><td>${esc(tx.shade||'—')}</td><td>—</td><td>${tx.qtyOut}</td></tr></table>`)}
+function printPMIssueLike(no,title,date,dept,rows,remarks){printShell(title,`<div class="meta"><div><b>Document No:</b> ${esc(no)}</div><div><b>Date:</b> ${esc(date)}</div><div><b>Department:</b> ${esc(dept||'')}</div><div><b>Remarks:</b> ${esc(remarks||'')}</div></div><table><tr><th>S.No.</th><th>Code</th><th>Material</th><th>Shade</th><th>UOM</th><th>Qty</th></tr>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r[0]||'—')}</td><td>${esc(r[1])}</td><td>${esc(r[2]||'—')}</td><td>${esc(r[3])}</td><td>${esc(r[4])}</td></tr>`).join('')}</table>`)}
+function printFGReceipt(x,no,date){printShell('FINISHED GOODS RECEIPT',`<div class="meta"><div><b>Receipt No:</b> ${esc(no)}</div><div><b>Date:</b> ${esc(date)}</div><div><b>Product:</b> ${esc(x.name)}</div><div><b>Code:</b> ${esc(x.code)}</div><div><b>Shade:</b> ${esc(x.shadeName||'—')} / ${esc(x.shadeCode||'—')}</div><div><b>Batch:</b> ${esc(x.batch)}</div></div><table><tr><th>Product</th><th>Shade</th><th>Batch</th><th>Qty</th><th>MFD</th><th>EXP</th><th>Location</th></tr><tr><td>${esc(x.name)}</td><td>${esc(x.shadeName||'—')}</td><td>${esc(x.batch)}</td><td>${x.qty}</td><td>${esc(x.mfg)}</td><td>${esc(x.expiry)}</td><td>${esc(x.loc)}</td></tr></table>`)}
+function printFGIssue(x,no,date,q,dept){printShell('FINISHED GOODS ISSUE PASS',`<div class="meta"><div><b>Issue Pass No:</b> ${esc(no)}</div><div><b>Date:</b> ${esc(date)}</div><div><b>Department / Customer:</b> ${esc(dept)}</div><div><b>FEFO Batch:</b> ${esc(x.batch)}</div></div><table><tr><th>S.No.</th><th>Code</th><th>Product</th><th>Shade</th><th>Batch</th><th>MFD</th><th>EXP</th><th>Qty</th></tr><tr><td>1</td><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.shadeName||'—')}</td><td>${esc(x.batch)}</td><td>${esc(x.mfg)}</td><td>${esc(x.expiry)}</td><td>${q}</td></tr></table>`)}
+function printTransfer(title,no,date,rows){printShell(title,`<div class="meta"><div><b>Transfer No:</b> ${esc(no)}</div><div><b>Date:</b> ${esc(date)}</div></div><table><tr>${rows[0].length===9?'<th>Code</th><th>Product</th><th>Shade</th><th>Batch</th><th>Qty</th><th>MFD</th><th>EXP</th><th>From</th><th>To</th>':'<th>Code</th><th>Material</th><th>Shade</th><th>Qty</th><th>UOM</th><th>From</th><th>To</th>'}</tr>${rows.map(r=>`<tr>${r.map(v=>`<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</table>`)}
+function printLedger(){let rows=db.tx.map(x=>`<tr><td>${esc(x.time)}</td><td>${esc(x.no)}</td><td>${esc(x.type)}</td><td>${esc(x.module)}</td><td>${esc(x.name)}</td><td>${esc(x.shade||'—')}</td><td>${esc(x.batch||'—')}</td><td>${x.qtyIn||0}</td><td>${x.qtyOut||0}</td></tr>`).join('');printShell('STOCK LEDGER',`<table><tr><th>Date</th><th>Transaction</th><th>Type</th><th>Module</th><th>Item</th><th>Shade</th><th>Batch</th><th>In</th><th>Out</th></tr>${rows}</table>`)}
+renderAll();
+
+/* ==========================================================
+   KOLOR ACTIV FREE CLOUD SYNC
+   Backend: Supabase Free + Static HTML hosting
+   Replace only SUPABASE_URL and SUPABASE_ANON_KEY.
+   ========================================================== */
+const KA_CLOUD_CONFIG = {
+  SUPABASE_URL: 'https://cejqcynsxrxdfaszriwy.supabase.co',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNlanFjeW5zeHJ4ZGZhc3pyaXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1OTg2NDUsImV4cCI6MjEwMjE3NDY0NX0.TX-V2A2siYbOsyuNITDDyS-mCWXkyfFtdwNIWaplm_k',
+  APP_ID: 'kolor_store',
+  APP_NAME: 'Kolor Activ Store ERP'
+};
+
+let kaSb = null;
+let kaUser = null;
+let kaLastCloudUpdatedAt = null;
+let kaSyncBusy = false;
+let kaRemoteChannel = null;
+
+function kaReadyConfig(){
+  return KA_CLOUD_CONFIG.SUPABASE_URL.startsWith('https://')
+    && !KA_CLOUD_CONFIG.SUPABASE_URL.includes('YOUR-PROJECT')
+    && KA_CLOUD_CONFIG.SUPABASE_ANON_KEY
+    && !KA_CLOUD_CONFIG.SUPABASE_ANON_KEY.includes('YOUR_');
+}
+
+function kaMakeGate(){
+  if(document.getElementById('kaCloudGate')) return;
+  const d=document.createElement('div');
+  d.id='kaCloudGate';
+  d.innerHTML=`<div class="box">
+    <div style="font-size:11px;font-weight:800;letter-spacing:.08em;color:#1a4fa0;text-transform:uppercase">KOLOR ACTIV ONLINE ERP</div>
+    <h2>Team Login</h2>
+    <div class="ka-muted">This app is connected to the shared cloud database. Each team member should use their own account.</div>
+    <input id="kaEmail" type="email" placeholder="Work email">
+    <input id="kaPassword" type="password" placeholder="Password (minimum 6 characters)">
+    <button class="ka-cloud-btn ka-primary" onclick="kaSignIn()">Sign in</button>
+    <button class="ka-cloud-btn ka-secondary" onclick="kaSignUp()">Create account</button>
+    <button class="ka-cloud-btn ka-secondary" onclick="kaSignOut()">Sign out</button>
+    <div id="kaCloudMsg"></div>
+    <div class="ka-muted" style="margin-top:14px">If you are the administrator, create your account first, then add/approve team members in Supabase.</div>
+  </div>`;
+  document.body.appendChild(d);
+}
+function kaGate(show=true){ const x=document.getElementById('kaCloudGate'); if(x) x.style.display=show?'flex':'none'; }
+function kaMsg(s,good=false){const x=document.getElementById('kaCloudMsg');if(x){x.textContent=s;x.style.color=good?'#15803d':'#b91c1c';}}
+
+async function kaSignIn(){
+  try{
+    const email=document.getElementById('kaEmail').value.trim();
+    const password=document.getElementById('kaPassword').value;
+    if(!email||!password) return kaMsg('Enter email and password.');
+    const {error}=await kaSb.auth.signInWithPassword({email,password});
+    if(error) throw error;
+    kaMsg('Signed in.',true);
+  }catch(e){kaMsg(e.message||String(e));}
+}
+async function kaSignUp(){
+  try{
+    const email=document.getElementById('kaEmail').value.trim();
+    const password=document.getElementById('kaPassword').value;
+    if(!email||password.length<6) return kaMsg('Use a valid email and a password of at least 6 characters.');
+    const {data,error}=await kaSb.auth.signUp({email,password});
+    if(error) throw error;
+    if(data.session) kaMsg('Account created and signed in.',true);
+    else kaMsg('Account created. Check your email if email confirmation is enabled.',true);
+  }catch(e){kaMsg(e.message||String(e));}
+}
+async function kaSignOut(){ if(kaSb) await kaSb.auth.signOut(); }
+
+function kaGetLocalState(){
+  try{
+    if(KA_CLOUD_CONFIG.APP_ID==='kolor_store'){
+      return {db: (typeof db!=='undefined'?db:null), hostCfg:(typeof hostCfg!=='undefined'?hostCfg:null)};
+    }
+    return {APP_STATE:(typeof APP_STATE!=='undefined'?APP_STATE:null), isHostMode:(typeof isHostMode!=='undefined'?isHostMode:false)};
+  }catch(e){return {}}
+}
+function kaApplyState(payload){
+  if(!payload) return;
+  try{
+    if(KA_CLOUD_CONFIG.APP_ID==='kolor_store'){
+      if(payload.db && typeof db!=='undefined'){ db=payload.db; localStorage.setItem('kolorActivStoreV2',JSON.stringify(db)); }
+      if(payload.hostCfg && typeof hostCfg!=='undefined'){ hostCfg=payload.hostCfg; localStorage.setItem('kolorActivHostControlV1',JSON.stringify(hostCfg)); }
+      if(typeof renderAll==='function') renderAll();
+      if(typeof renderHost==='function') renderHost();
+    }else{
+      if(payload.APP_STATE && typeof APP_STATE!=='undefined'){ APP_STATE=payload.APP_STATE; localStorage.setItem('kolor_activ_erp_v27',JSON.stringify(APP_STATE)); }
+      if(typeof initUI==='function') initUI();
+    }
+  }catch(e){console.error('Cloud state apply failed',e);}
+}
+
+function kaShowBar(){
+  let b=document.getElementById('kaCloudBar');
+  if(!b){b=document.createElement('div');b.id='kaCloudBar';b.innerHTML='<span id="kaCloudDot"></span><span id="kaCloudUser"></span><button class="ka-cloud-btn ka-secondary" style="padding:5px 8px;margin:0" onclick="kaSyncNow()">Sync</button><button class="ka-cloud-btn ka-secondary" style="padding:5px 8px;margin:0" onclick="kaSignOut()">Logout</button>';document.body.appendChild(b);}
+  b.style.display='flex';
+  document.getElementById('kaCloudUser').textContent=kaUser?.email||'Signed in';
+}
+function kaCloudStatus(text, color){
+  const d=document.getElementById('kaCloudDot'); if(d){d.style.background=color||'#f59e0b';}
+  const u=document.getElementById('kaCloudUser'); if(u && text) u.textContent=(kaUser?.email||'User')+' · '+text;
+}
+async function kaLoadCloud(){
+  const {data,error}=await kaSb.from('erp_state').select('state,updated_at,updated_by').eq('app_id',KA_CLOUD_CONFIG.APP_ID).maybeSingle();
+  if(error) throw error;
+  if(data){
+    kaLastCloudUpdatedAt=data.updated_at;
+    const empty = !data.state || Object.keys(data.state).length===0;
+    if(empty) await kaWriteCloud(true);
+    else kaApplyState(data.state);
+  }else{
+    await kaWriteCloud(true);
+  }
+}
+async function kaWriteCloud(force=false){
+  if(!kaUser || kaSyncBusy) return;
+  kaSyncBusy=true; kaCloudStatus('Saving…','#2563eb');
+  try{
+    const {data:cur,error:readErr}=await kaSb.from('erp_state').select('updated_at').eq('app_id',KA_CLOUD_CONFIG.APP_ID).maybeSingle();
+    if(readErr) throw readErr;
+    if(!force && cur?.updated_at && kaLastCloudUpdatedAt && cur.updated_at!==kaLastCloudUpdatedAt){
+      const ok=confirm('Another user changed this ERP after your last sync. Reload the latest cloud data? Press Cancel only if you intentionally want to overwrite it.');
+      if(ok){ await kaLoadCloud(); return; }
+    }
+    const now=new Date().toISOString();
+    const {error}=await kaSb.from('erp_state').upsert({app_id:KA_CLOUD_CONFIG.APP_ID,state:kaGetLocalState(),updated_by:kaUser.id,updated_at:now});
+    if(error) throw error;
+    kaLastCloudUpdatedAt=now;
+    kaCloudStatus('Synced','#16a34a');
+  }catch(e){console.error(e);kaCloudStatus('Sync error','#dc2626');}
+  finally{kaSyncBusy=false;}
+}
+async function kaSyncNow(){ try{await kaLoadCloud();kaCloudStatus('Synced','#16a34a');}catch(e){kaCloudStatus('Sync error','#dc2626');alert(e.message||String(e));} }
+
+async function kaStart(){
+  if(!kaReadyConfig()){
+    kaMakeGate();kaGate(true);kaMsg('Open the HTML file and replace the Supabase URL and anon key first.');return;
+  }
+  kaSb=window.supabase.createClient(KA_CLOUD_CONFIG.SUPABASE_URL,KA_CLOUD_CONFIG.SUPABASE_ANON_KEY);
+  kaMakeGate();
+  const {data}=await kaSb.auth.getSession();
+  if(data.session){await kaOnSession(data.session);} else {kaGate(true);}
+  kaSb.auth.onAuthStateChange((_event,session)=>{ if(session) kaOnSession(session); else {kaUser=null;kaGate(true);} });
+}
+async function kaOnSession(session){
+  kaUser=session.user; kaGate(false); kaShowBar();
+  try{await kaLoadCloud();}catch(e){kaCloudStatus('Database error','#dc2626');alert('Cloud database error: '+(e.message||e));}
+  if(kaRemoteChannel) kaSb.removeChannel(kaRemoteChannel);
+  kaRemoteChannel=kaSb.channel('ka-'+KA_CLOUD_CONFIG.APP_ID)
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'erp_state',filter:'app_id=eq.'+KA_CLOUD_CONFIG.APP_ID},payload=>{
+      if(payload.new && payload.new.updated_by!==kaUser?.id){
+        kaLastCloudUpdatedAt=payload.new.updated_at;
+        kaApplyState(payload.new.state);
+        kaCloudStatus('Updated from team','#7c3aed');
+        setTimeout(()=>kaCloudStatus('Synced','#16a34a'),2500);
+      }
+    }).subscribe();
+}
+
+/* Patch the existing local save functions so every existing ERP form also saves to cloud. */
+(function patchSaves(){
+  const wait=()=>{
+    if(KA_CLOUD_CONFIG.APP_ID==='kolor_store' && typeof save==='function'){
+      const oldSave=save; window.save=function(){oldSave();kaWriteCloud(false);}
+      if(typeof hostSave==='function'){
+        const oldHostSave=hostSave; window.hostSave=function(){oldHostSave();kaWriteCloud(false);}
+      }
+    }
+    if(KA_CLOUD_CONFIG.APP_ID==='kolor_production' && typeof saveState==='function'){
+      const oldSaveState=saveState; window.saveState=function(){oldSaveState();kaWriteCloud(false);}
+    }
+  };
+  setTimeout(wait,0);
+})();
+
+window.addEventListener('load',()=>setTimeout(kaStart,250));
+</script>
+</body>
+</html>
