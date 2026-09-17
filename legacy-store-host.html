@@ -97,14 +97,25 @@ canvas{max-width:100%}.empty{text-align:center;color:var(--muted);padding:25px}.
 </section>
 
 <section id="reports" class="page">
- <div class="cards">
-  <div class="card"><div class="label">PM Stock Summary</div><button class="btn secondary" onclick="exportCSV('packing')">Download</button></div>
-  <div class="card"><div class="label">FG Stock / Batch</div><button class="btn secondary" onclick="exportCSV('finished')">Download</button></div>
-  <div class="card"><div class="label">Stock Ledger</div><button class="btn secondary" onclick="exportCSV('transactions')">Download</button></div>
-  <div class="card"><div class="label">FEFO / Expiry</div><button class="btn secondary" onclick="exportCSV('finished')">Download</button></div>
-  <div class="card"><div class="label">Audit Report</div><button class="btn secondary" onclick="exportCSV('audit')">Download</button></div>
+ <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+  <button class="btn secondary" onclick="exportCSV('transactions')">&#11015; Export CSV</button>
+  <button class="btn dark" onclick="printLedger()">&#128438; Print</button>
  </div>
- <div class="panel" style="margin-top:18px"><h3>Management Summary</h3><div id="reportSummary"></div></div>
+ <div class="cards" id="reportKPIs">
+  <div class="card"><div class="label">Opening Stock</div><div class="value blue" id="rptOpening">0</div><div class="small">Before all movements</div></div>
+  <div class="card"><div class="label">Total Stock In</div><div class="value green" id="rptStockIn">0</div><div class="small">All receipts — all time</div></div>
+  <div class="card"><div class="label">Current Stock</div><div class="value blue" id="rptCurrent">0</div><div class="small">PM + FG live units</div></div>
+  <div class="card"><div class="label">Transactions</div><div class="value" id="rptTx">0</div><div class="small">All ledger entries</div></div>
+ </div>
+ <div class="cards" style="margin-top:10px">
+  <div class="card"><div class="label">&#9888; PM Low Stock</div><div class="value amber" id="rptPMLow">0</div><div class="small">Items below min level</div></div>
+  <div class="card"><div class="label">&#10006; PM Out of Stock</div><div class="value red" id="rptPMOut">0</div><div class="small">PM items at zero</div></div>
+  <div class="card"><div class="label">&#9888; FG Low Stock</div><div class="value amber" id="rptFGLow">0</div><div class="small">Batches below 10 units</div></div>
+  <div class="card"><div class="label">&#10006; FG Out of Stock</div><div class="value red" id="rptFGOut">0</div><div class="small">FG batches at zero</div></div>
+ </div>
+ <div class="panel" style="margin-top:18px"><h3>PM Stock Summary</h3><div class="tablewrap"><table><thead><tr><th>Code</th><th>Material</th><th>UOM</th><th>Stock</th><th>Min</th><th>Status</th></tr></thead><tbody id="rptPMTable"></tbody></table></div></div>
+ <div class="panel" style="margin-top:14px"><h3>FG Batch Summary</h3><div class="tablewrap"><table><thead><tr><th>Code</th><th>Product</th><th>Batch</th><th>Qty</th><th>EXP</th><th>Status</th></tr></thead><tbody id="rptFGTable"></tbody></table></div></div>
+ <div class="panel" style="margin-top:14px"><h3>Management Summary</h3><div id="reportSummary"></div></div>
 </section>
 
 <section id="masters" class="page">
@@ -477,6 +488,8 @@ function renderAll(){
  renderTransactions();document.getElementById('auditTable').innerHTML=db.audits.map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.module)}</td><td>${esc(x.item)}</td><td>${esc(x.batch||'')}</td><td>${x.system}</td><td>${x.physical}</td><td class="${x.var<0?'dangertext':''}">${x.var}</td><td>${esc(x.remarks||'')}</td></tr>`).join('');
  document.getElementById('masterTable').innerHTML=db.pm.map(x=>`<tr><td>Packing Material</td><td>${esc(x.code||'—')}</td><td>${esc(x.name)}</td><td>${esc(x.shadeName||'—')}</td><td>${esc(x.shadeCode||'—')}</td><td>${esc(x.uom)}</td><td>${x.min}</td><td>${esc(x.loc)}</td></tr>`).join('')+fgMasters().map(x=>`<tr><td>Finished Goods</td><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.shadeName||'—')}</td><td>${esc(x.shadeCode||'—')}</td><td>${esc(x.uom)}</td><td>—</td><td>${esc(x.loc)}</td></tr>`).join('');
  document.getElementById('reportSummary').innerHTML=`<p><b>Packing Material:</b> ${db.pm.length} items, total stock ${db.pm.reduce((s,x)=>s+x.stock,0).toLocaleString()}, low stock ${db.pm.filter(x=>x.stock<x.min).length}.</p><p><b>Finished Goods:</b> ${fgMasters().length} products, ${db.fg.filter(x=>x.batch!=='MASTER').length} batch records, total stock ${db.fg.filter(x=>x.batch!=='MASTER').reduce((s,x)=>s+x.qty,0).toLocaleString()}.</p><p><b>Expiry:</b> ${alerts.length} batch(es) require attention.</p>`;
+ const _pmStock=db.pm.reduce((s,x)=>s+x.stock,0);const _fgStock=db.fg.filter(x=>x.batch!=='MASTER').reduce((s,x)=>s+x.qty,0);const _totalIn=db.tx.reduce((s,x)=>s+(x.qtyIn||0),0);const _totalOut=db.tx.reduce((s,x)=>s+(x.qtyOut||0),0);const _current=_pmStock+_fgStock;const _opening=Math.max(0,_current-(_totalIn-_totalOut));
+ const _el=id=>document.getElementById(id);if(_el('rptOpening')){_el('rptOpening').textContent=_opening.toLocaleString('en-IN');_el('rptStockIn').textContent=_totalIn.toLocaleString('en-IN');_el('rptCurrent').textContent=_current.toLocaleString('en-IN');_el('rptTx').textContent=db.tx.length;_el('rptPMLow').textContent=db.pm.filter(x=>x.stock>0&&x.stock<x.min).length;_el('rptPMOut').textContent=db.pm.filter(x=>x.stock<=0).length;_el('rptFGLow').textContent=db.fg.filter(x=>x.batch!=='MASTER'&&x.qty>0&&x.qty<10).length;_el('rptFGOut').textContent=db.fg.filter(x=>x.batch!=='MASTER'&&x.qty<=0).length;_el('rptPMTable').innerHTML=db.pm.map(x=>`<tr><td>${x.code||'-'}</td><td>${x.name}</td><td>${x.uom}</td><td>${x.stock.toLocaleString('en-IN')}</td><td>${x.min||'-'}</td><td style="color:${x.stock<=0?'#dc2626':x.stock<x.min?'#f59e0b':'#16a34a'}">${x.stock<=0?'Out of Stock':x.stock<x.min?'Low Stock':'In Stock'}</td></tr>`).join('');_el('rptFGTable').innerHTML=db.fg.filter(x=>x.batch!=='MASTER').map(x=>`<tr><td>${x.code||'-'}</td><td>${x.name}</td><td>${x.batch}</td><td>${x.qty.toLocaleString('en-IN')}</td><td>${x.expiry||'-'}</td><td style="color:${x.qty<=0?'#dc2626':x.qty<10?'#f59e0b':'#16a34a'}">${x.qty<=0?'Out of Stock':x.qty<10?'Low Stock':'In Stock'}</td></tr>`).join('');}
 }
 function renderTransactions(){let q=(document.getElementById('searchTx')?.value||'').toLowerCase();document.getElementById('txTable').innerHTML=db.tx.filter(x=>JSON.stringify(x).toLowerCase().includes(q)).map(x=>`<tr><td>${esc(x.time)}</td><td>${esc(x.no||'')}</td><td>${esc(x.type)}</td><td>${esc(x.module)}</td><td>${esc(x.code||'—')}</td><td>${esc(x.name)}</td><td>${esc(x.shade||'—')}</td><td>${esc(x.batch||'—')}</td><td>${x.qtyIn||0}</td><td>${x.qtyOut||0}</td><td>${esc(x.loc||'')}</td></tr>`).join('')||'<tr><td colspan="11" class="empty">No transactions found</td></tr>'}
 function exportCSV(type){let rows=[];if(type==='packing')rows=[['Code','Material','Shade','Shade Code','UOM','Stock','Min','Location'],...db.pm.map(x=>[x.code,x.name,x.shadeName,x.shadeCode,x.uom,x.stock,x.min,x.loc])];if(type==='finished')rows=[['Code','Product','Shade','Shade Code','Batch','Qty','MFD','EXP','Location'],...db.fg.filter(x=>x.batch!=='MASTER').map(x=>[x.code,x.name,x.shadeName,x.shadeCode,x.batch,x.qty,x.mfg,x.expiry,x.loc])];if(type==='transactions')rows=[['Time','Transaction No.','Type','Module','Code','Item','Shade','Batch','MFD','EXP','Qty In','Qty Out','Location'],...db.tx.map(x=>[x.time,x.no,x.type,x.module,x.code,x.name,x.shade,x.batch,x.mfd,x.expiry,x.qtyIn,x.qtyOut,x.loc])];if(type==='audit')rows=[['Date','Module','Item','Batch','System','Physical','Variance','Remarks'],...db.audits.map(x=>[x.date,x.module,x.item,x.batch,x.system,x.physical,x.var,x.remarks])];let csv=rows.map(r=>r.map(v=>`"${String(v??'').replaceAll('"','""')}"`).join(',')).join('\\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=type+'_report.csv';a.click()}
